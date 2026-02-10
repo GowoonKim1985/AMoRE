@@ -1,0 +1,4 @@
+[ libRawObjs.so ]
+# List of selected classes
+class FChannelData
+header RawObjs/FChannelData.hh

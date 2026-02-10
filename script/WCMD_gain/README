@@ -1,0 +1,10 @@
+1. using muon run
+
+   qmax_wcd_genrun.C // input : run, isub (using 2 weeks data)
+   qfit_wcd_genrun.C // input : run, isub
+
+
+2. using ped run
+
+   qmax_wcd.C
+   qfit_wcd.C

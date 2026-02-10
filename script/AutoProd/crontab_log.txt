@@ -1,0 +1,198 @@
+44
+prd_wcd_000304_00000.root
+file already producted
+prd_wcd_000304_00001.root
+file already producted
+prd_wcd_000304_00002.root
+file already producted
+prd_wcd_000304_00003.root
+file already producted
+prd_wcd_000304_00004.root
+file already producted
+prd_wcd_000304_00005.root
+file already producted
+prd_wcd_000304_00006.root
+file already producted
+prd_wcd_000304_00007.root
+file already producted
+prd_wcd_000304_00008.root
+file already producted
+prd_wcd_000304_00009.root
+file already producted
+prd_wcd_000304_00010.root
+file already producted
+prd_wcd_000304_00011.root
+file already producted
+prd_wcd_000304_00012.root
+file already producted
+prd_wcd_000304_00013.root
+file already producted
+prd_wcd_000304_00014.root
+file already producted
+prd_wcd_000304_00015.root
+file already producted
+prd_wcd_000304_00016.root
+file already producted
+prd_wcd_000304_00017.root
+file already producted
+prd_wcd_000304_00018.root
+file already producted
+prd_wcd_000304_00019.root
+file already producted
+prd_wcd_000304_00020.root
+file already producted
+prd_wcd_000304_00021.root
+file already producted
+prd_wcd_000304_00022.root
+file already producted
+prd_wcd_000304_00023.root
+file already producted
+prd_wcd_000304_00024.root
+file already producted
+prd_wcd_000304_00025.root
+file already producted
+prd_wcd_000304_00026.root
+file already producted
+prd_wcd_000304_00027.root
+file already producted
+prd_wcd_000304_00028.root
+file already producted
+prd_wcd_000304_00029.root
+file already producted
+prd_wcd_000304_00030.root
+file already producted
+prd_wcd_000304_00031.root
+file already producted
+prd_wcd_000304_00032.root
+file already producted
+prd_wcd_000304_00033.root
+file already producted
+prd_wcd_000304_00034.root
+file already producted
+prd_wcd_000304_00035.root
+file already producted
+prd_wcd_000304_00036.root
+file already producted
+prd_wcd_000304_00037.root
+file already producted
+prd_wcd_000304_00038.root
+file already producted
+prd_wcd_000304_00039.root
+file already producted
+prd_wcd_000304_00040.root
+file already producted
+prd_wcd_000304_00041.root
+file already producted
+prd_wcd_000304_00042.root
+file already producted
+prd_wcd_000304_00043.root
+
+Processing /home/kkw/muon_3.1.2/AutoProd/MAC/prd_wcd_43.C...
+275866
+100000
+200000
+Real time 0:01:38, CP time 69.480
+file producted
+prd_psd_daq1_000304_00000.root
+file already producted
+prd_psd_daq1_000304_00001.root
+file already producted
+prd_psd_daq1_000304_00002.root
+file already producted
+prd_psd_daq1_000304_00003.root
+file already producted
+prd_psd_daq1_000304_00004.root
+file already producted
+prd_psd_daq1_000304_00005.root
+file already producted
+prd_psd_daq1_000304_00006.root
+file already producted
+prd_psd_daq1_000304_00007.root
+file already producted
+prd_psd_daq1_000304_00008.root
+file already producted
+prd_psd_daq1_000304_00009.root
+file already producted
+prd_psd_daq1_000304_00010.root
+file already producted
+prd_psd_daq1_000304_00011.root
+file already producted
+prd_psd_daq1_000304_00012.root
+file already producted
+prd_psd_daq1_000304_00013.root
+file already producted
+prd_psd_daq1_000304_00014.root
+file already producted
+prd_psd_daq1_000304_00015.root
+file already producted
+prd_psd_daq1_000304_00016.root
+file already producted
+prd_psd_daq1_000304_00017.root
+file already producted
+prd_psd_daq1_000304_00018.root
+file already producted
+prd_psd_daq1_000304_00019.root
+file already producted
+prd_psd_daq1_000304_00020.root
+file already producted
+prd_psd_daq1_000304_00021.root
+file already producted
+prd_psd_daq1_000304_00022.root
+file already producted
+prd_psd_daq1_000304_00023.root
+file already producted
+prd_psd_daq1_000304_00024.root
+file already producted
+prd_psd_daq1_000304_00025.root
+file already producted
+prd_psd_daq1_000304_00026.root
+file already producted
+prd_psd_daq1_000304_00027.root
+file already producted
+prd_psd_daq1_000304_00028.root
+file already producted
+prd_psd_daq1_000304_00029.root
+file already producted
+prd_psd_daq1_000304_00030.root
+file already producted
+prd_psd_daq1_000304_00031.root
+file already producted
+prd_psd_daq1_000304_00032.root
+file already producted
+prd_psd_daq1_000304_00033.root
+file already producted
+prd_psd_daq1_000304_00034.root
+file already producted
+prd_psd_daq1_000304_00035.root
+file already producted
+prd_psd_daq1_000304_00036.root
+file already producted
+prd_psd_daq1_000304_00037.root
+file already producted
+prd_psd_daq1_000304_00038.root
+file already producted
+prd_psd_daq1_000304_00039.root
+file already producted
+prd_psd_daq1_000304_00040.root
+file already producted
+prd_psd_daq1_000304_00041.root
+file already producted
+prd_psd_daq1_000304_00042.root
+file already producted
+prd_psd_daq1_000304_00043.root
+
+Processing /home/kkw/muon_3.1.2/AutoProd/MAC/prd_psd1_43.C...
+151247
+ 50000 event processed ...
+100000 event processed ...
+150000 event processed ...
+150887
+Real time 0:00:15, CP time 14.800
+
+Processing /home/kkw/muon_3.1.2/AutoProd/MAC/prd_psd2_43.C...
+139140
+ 50000 event processed ...
+100000 event processed ...
+138780
+Real time 0:00:15, CP time 14.050
+file producted

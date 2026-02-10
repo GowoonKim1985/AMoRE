@@ -1,0 +1,4 @@
+[ libOnlObjs.so ]
+# List of selected classes
+class AbsADCRaw
+header OnlObjs/AbsADCRaw.hh

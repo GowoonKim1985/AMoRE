@@ -1,0 +1,185 @@
+void plot_wcd()
+{
+  gStyle -> SetOptStat(0);
+  
+  TChain *chain = new TChain("tree");
+  chain -> Add("/y/kmseo/data/WCMD/000216/oldtree/tree_WCMD_*.root");
+
+  double qtot[48] = {0};
+  double qmax[48] = {0}, maxq;
+  double maxqsum[48] = {0};
+  double a[48] = {0};
+  int npeaks[48] = {0};
+  int nn[48] = {0};
+  int nn_max[48] = {0};
+  int qmaxx[48] = {0}, maxqid;
+  int tbit[48], tbitsum;
+  double qsum;
+  chain -> SetBranchAddress("qtot", qtot);
+  chain -> SetBranchAddress("qmax", qmax);
+  chain -> SetBranchAddress("qmaxx", qmaxx);
+  chain -> SetBranchAddress("npeaks", npeaks);
+  chain -> SetBranchAddress("tbit", tbit);
+
+  // //for Qtot
+  // TH1D *hqsum = new TH1D("hqsum", "", 500, 0, 50000);
+  // TH1D *hqsum_sel = new TH1D("hqsum_sel", "", 500, 0, 50000);
+  // TH1D *hqtot[48];
+  // for(int i = 0; i < 48; i++){
+  //   hqtot[i] = new TH1D(Form("hqtot_%d", i), "", 100, 0, 3000);
+  // }
+  // TH1D *hnpeaks = new TH1D("hnpeaks", "", 20, 0, 20);
+  // TH1D *htbit = new TH1D("htbit", "", 48, 0, 48);
+  // TH2D *hhitmap = new TH2D("hhitmap", "", 7, 0, 7, 7, 0, 7);
+  // TH2D *htbQ = new TH2D("htbQ", "", 48, 0, 48, 500, 0, 50000);
+  // TH2D *hnpQ = new TH2D("hnpQ", "", 20, 0, 20, 100, 0, 3000);
+
+  //for Qmax
+  TH1D *hqsum = new TH1D("hqsum", "", 500, 0, 3000);
+  hqsum -> SetXTitle("Qsum");
+  hqsum -> SetYTitle("Number of Entries");
+  TH1D *hqsum_sel = new TH1D("hqsum_sel", "", 500, 0, 3000);
+  hqsum_sel -> SetXTitle("Qsum");
+  hqsum_sel -> SetYTitle("Number of Entries");
+  TH1D *hqtot[48];
+  for(int i = 0; i < 48; i++){
+    hqtot[i] = new TH1D(Form("hqtot_%d", i), "", 100, 0, 100);
+    hqtot[i] -> SetXTitle(Form("Qtot of PMT %2d", i+1));
+    hqtot[i] -> SetYTitle("Number of Entries");
+
+    hqtot[i] -> GetXaxis() -> SetTitleSize(0.09);
+    hqtot[i] -> GetXaxis() -> SetTitleOffset(0.5);
+    hqtot[i] -> GetXaxis() -> SetLabelSize(0.07);
+    hqtot[i] -> GetYaxis() -> SetTitleSize(0.09);
+    hqtot[i] -> GetYaxis() -> SetTitleOffset(0.5);
+    hqtot[i] -> GetYaxis() -> SetLabelSize(0.07);
+  }
+  TH1D *hnpeaks = new TH1D("hnpeaks", "", 20, 0, 20);
+  TH2D *hnpQ = new TH2D("hnpQ", "", 20, 0, 20, 100, 0, 100);
+  TH1D *htbit = new TH1D("htbit", "", 48, 0, 48);
+  htbit -> SetXTitle("Number of TRG bit");
+  htbit -> SetYTitle("Number fo Entries");
+  TH2D *htbQ = new TH2D("htbQ", "", 48, 0, 48, 500, 0, 1500);
+  htbQ -> SetXTitle("Number of TRG bit");
+  htbQ -> SetYTitle("Qsum");
+  TH2D *hhitmap = new TH2D("hhitmap", "", 7, 0, 7, 7, 0, 7);
+  hhitmap -> SetXTitle("Row of PMT map");
+  hhitmap -> SetYTitle("Column of PMT map");
+  TH2D *hhitmap_cnt = new TH2D("hhitmap_cnt", "", 7, 0, 7, 7, 0, 7);
+  hhitmap_cnt -> SetXTitle("Row of PMT map");
+  hhitmap_cnt -> SetYTitle("Column of PMT map");
+  TH2D *hhitmap_max = new TH2D("hhitmap_max", "", 7, 0, 7, 7, 0, 7);
+  hhitmap_max -> SetXTitle("Row of PMT map");
+  hhitmap_max -> SetYTitle("Column of PMT map");
+  TH2D *hhitmap_cnt_max = new TH2D("hhitmap_cnt_max", "", 7, 0, 7, 7, 0, 7);
+  hhitmap_cnt_max -> SetXTitle("Row of PMT map");
+  hhitmap_cnt_max -> SetYTitle("Column of PMT map");
+  
+  int nevt = chain -> GetEntries();
+  cout << nevt << endl;
+  for(int i = 0; i < nevt; i++){
+    if(i != 0 && i%2000000 == 0) cout << i << endl;
+    chain -> GetEntry(i);
+    qsum = 0;
+    tbitsum = 0;
+    maxq = 0;
+    maxqid = 0;
+    
+    for(int j = 0; j < 48; j++){
+      if(tbit[j] != 1) continue;
+      tbitsum += tbit[j];
+      nn[j]++;
+      
+      if(qmax[j] > maxq){
+	maxq = qmax[j];
+	maxqid = j;
+	nn_max[j]++;
+      }
+      
+      hnpeaks -> Fill(npeaks[j]);
+      // hnpQ -> Fill(npeaks[j], qtot[j]);
+      // qsum += qtot[j];
+      // hqtot[j] -> Fill(qtot[j]);
+      hnpQ -> Fill(npeaks[j], qmax[j]);
+      qsum += qmax[j];
+      hqtot[j] -> Fill(qmax[j]);
+    }
+    maxqsum[maxqid] += maxq;
+
+    hqsum -> Fill(qsum);
+    if(tbitsum > 20){
+      hqsum_sel -> Fill(qsum);
+
+      for(int k = 0; k < 48; k++){
+	if(tbit[k] == 1){
+	  hhitmap_cnt -> Fill(7-k/7-1, 7-k%7-1);
+	  hhitmap_cnt_max -> Fill(7-maxqid/7-1, 7-maxqid%7-1);
+
+	  a[k] += qmax[k];
+	}
+      }
+    }
+    htbit -> Fill(tbitsum);
+    htbQ -> Fill(tbitsum, qsum);
+  }
+
+  for(int i = 0; i < 47; i++){
+    hhitmap -> SetBinContent(7-i/7, 7-i%7, a[i]/nn[i]);  
+    hhitmap_max -> SetBinContent(7-i/7, 7-i%7,
+				 maxqsum[i]/nn_max[i]);
+  }
+  
+  // TCanvas *can_tbit = new TCanvas("can_tbit", "", 1600, 600);
+  // can_tbit -> Divide(2, 1);
+  // can_tbit -> cd(1);
+  // TPad *pad_tb = (TPad*)can_tbit -> cd(1);
+  // htbit -> Draw();
+  // pad_tb -> SetLogy();
+  // can_tbit -> cd(2);
+  // htbQ -> Draw();
+  // //can_tbit -> Print("./figure/20230919/WCMD_tbit.png");
+  
+  TCanvas *can_hmap = new TCanvas("can_hmap", "All", 1200, 600);
+  can_hmap -> Divide(2, 1);
+  can_hmap -> cd(1);
+  hhitmap -> Draw("colz");
+  can_hmap -> cd(2);
+  hhitmap_cnt -> Draw("colz");
+  //can_hmap -> Print("./figure/20230919/WCMD_hmap.png");
+
+  TCanvas *can_hmap_max = new TCanvas("can_hmap_max", "for max", 1200, 600);
+  can_hmap_max -> Divide(2, 1);
+  can_hmap_max -> cd(1);
+  hhitmap_max -> Draw("colz");
+  can_hmap_max -> cd(2);
+  hhitmap_cnt_max -> Draw("colz");
+  //can_hmap_max -> Print("./figure/20230919/WCMD_hmap_max.png");
+
+  // TCanvas *can_npeaks = new TCanvas("can_npeaks", "", 1600, 600);
+  // can_npeaks -> Divide(2, 1);
+  // can_npeaks -> cd(1);
+  // TPad *pad = (TPad*)can_npeaks -> cd(1);
+  // hnpeaks -> Draw();
+  // pad -> SetLogy();
+  // can_npeaks -> cd(2);
+  // hnpQ -> Draw();
+  
+  // TCanvas *can_sum = new TCanvas("can_sum", "", 800, 600);
+  // hqsum -> Draw();
+  // hqsum_sel -> SetLineColor(kRed);
+  // hqsum_sel -> Draw("same");
+  // can_sum -> SetLogy();
+  // //can_sum -> Print("./figure/20230919/WCMD_qsum.png");
+  
+  // TCanvas *can_qtot = new TCanvas("can_qtot", "", 1600, 800);
+  // can_qtot -> Divide(7, 7);
+  // TPad *pad_qtot[48];
+  // for(int i = 0; i < 48; i++){
+  //   can_qtot -> cd(i+1);
+  //   pad_qtot[i] = (TPad*)can_qtot -> cd(i+1);
+    
+  //   hqtot[i] -> Draw();
+  //   pad_qtot[i] -> SetLogy();
+  // }
+  // //can_qtot -> Print("./figure/20230919/WCMD_qtot.png");
+}

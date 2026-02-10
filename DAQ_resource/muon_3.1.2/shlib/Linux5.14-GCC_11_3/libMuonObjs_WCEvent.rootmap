@@ -1,0 +1,4 @@
+[ libMuonObjs.so ]
+# List of selected classes
+class WCEvent
+header MuonObjs/WCEvent.hh

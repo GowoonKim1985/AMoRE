@@ -1,0 +1,4 @@
+[ libRawObjs.so ]
+# List of selected classes
+class ArrayS
+header RawObjs/ArrayS.hh

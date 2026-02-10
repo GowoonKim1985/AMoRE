@@ -1,0 +1,125 @@
+R__LOAD_LIBRARY(libHist)
+R__LOAD_LIBRARY(libRawObjs)
+//R__LOAD_LIBRARY(/home/kmseo/Works/muon_3.1.2/shlib/Linux5.14-GCC_11_4/libMuonObjs.so)
+R__LOAD_LIBRARY(/home/kkw/muon_3.1.2/shlib/Linux5.14-GCC_11_4/libMuonObjs.so)
+
+#include <cmath> // for std::nan()
+
+void plot_trg()
+{
+  //
+  gStyle -> SetOptStat(0);
+  //run 272 sub 0 - 64 : 231105 17:16:11
+  //run 287 sub 0 - 93
+  //run 288 sub 0 -525
+  //run 294 sub 0 - 76
+  //run 303 sub 0-1154
+  //run 304 sub 0 -791
+  //run 311 sub 0 - 190
+  //run 315  sub 0 - 191
+  //run 318 sub 0 - 689
+  //run 327 sub 0 - 282
+  //run 330 sub 0 - 695
+  //run 339 sub 0 - 286
+  //run 343 sub 0 - 94
+  //run 356 sub 0 - 667
+  //run 361 sub 0 - 143  
+  //run 368 sub 0 - 332
+
+
+  /*  
+  const int fn = 26;
+    int run[fn] = {287, 288, 294, 303, 304, 315, 318, 327, 330, 339, 343, 356, 361, 368, 376, 401, 404, 405, 407, 409, 411, 413, 416, 426, 429, 435};
+    int finsub[fn] = {93, 525, 76, 1154, 791, 191, 689, 282, 695, 286, 94, 667, 143, 332, 18, 169, 63, 68, 23, 44, 72, 20, 16, 338, 15, 474};
+
+    int daygap[fn]={0, 29, 33, 34, 83, 124, 132, 161, 173, 225, 237, 238, 243, 244, 299, 305, 319, 356, 363, 366, 369, 370, 372, 375, 376, 379, 396, 397}
+  */
+  
+    const int fn = 28;
+    int run[fn] = {287, 294, 298, 303, 304, 315, 318, 327, 330, 339, 341, 343, 355, 356, 361, 368, 376, 401, 404, 405, 407, 409, 411, 413, 416, 426, 429, 435};
+    int daygap[fn]={0, 29, 33, 34, 83, 124, 132, 161, 173, 225, 237, 238, 243, 244, 299, 305, 319, 356, 363, 366, 369, 370, 372, 375, 376, 379, 396, 397};
+  
+
+      
+      
+  //  int subdiv=50; // how many sub files
+  int subdiv=24; // how many sub files
+  double mean[7];
+  TCanvas * crate = new TCanvas("crate","crate",1500,600);
+  //  TCanvas * cmrate = new TCanvas("cmrate","cmrate",1500,600);  
+  //  TCanvas * ccnt = new TCanvas("ccnt","ccnt",800,600);  
+
+  TH1D * hrate = new TH1D ("hrate","",5000,0,420);
+  TH1D * hmrate = new TH1D ("hmrate","",5000,0,420);  
+  //  TH1D * hrate = new TH1D ("hrate","",5000,0,30);
+  //  TH1D * hmrate = new TH1D ("hmrate","",5000,0,30);  
+
+  
+  //  int dp = 360; //1hr 360*10
+  int dp = 8640; //1day 
+  double rate, mrate, trgtime;
+  
+  for(int lp=0; lp<fn; lp++){
+    //  for(int lp=0; lp<4; lp++){    
+
+    //    ibin=daygap[lp]+1;// ibin start from 0
+  
+    TString rawfile = Form("/home/kkw/muon_3.1.2/analysis/WCMD_trig/div/run%i_rate_10s.root",run[lp]);
+    TChain * chain = new TChain("value");
+    chain->Add(rawfile);
+    int tent = chain->GetEntries();
+    cout<<tent<<endl;
+    hrate->Reset();
+    hmrate->Reset();
+    for(int i=0; i<tent; i=i+dp){
+
+      if(i % dp !=0) continue;
+      chain->GetEntry(i);
+      rate = chain->GetLeaf("rate")->GetValue();// 5=q6/q42
+      mrate = chain->GetLeaf("m_rate")->GetValue();// 5=q6/q42	
+      trgtime = chain->GetLeaf("trgtime")->GetValue();// 5=q6/q42
+      trgtime=trgtime/60./60./24.;//sec to day
+      trgtime = trgtime + daygap[lp];
+      
+      int ibin = hrate->FindBin(trgtime);
+      hrate->SetBinContent(ibin, rate);
+      hmrate->SetBinContent(ibin, mrate);      
+    }
+  
+
+  }
+
+
+    hrate->SetMarkerStyle(21);
+    hrate->SetMarkerColor(2);
+  hrate->GetXaxis()->SetTitle("time(day)");
+  hrate->GetYaxis()->SetTitle("rate");	
+  crate->cd();
+  hrate->Draw("P");
+
+  //  crate->Update();
+
+  hmrate->SetMarkerStyle(21);
+
+  //  hmrate->GetXaxis()->SetTitle("time(day)");
+  //  hmrate->GetYaxis()->SetTitle("rate(avg)");	
+  //  crate->cd();
+  hmrate->Draw("P same");
+
+  crate->Update();
+
+  TFile * outfile = new TFile("./wcmd_rate.root","RECREATE");
+
+    hrate->Write();
+    hmrate->Write();
+    crate->Write();
+    //    cmrate->Write();
+  outfile->Close();
+
+    
+  }
+    
+  //  cmean->Update();
+
+  
+  

@@ -1,0 +1,120 @@
+R__LOAD_LIBRARY(libHist)
+R__LOAD_LIBRARY(libRawObjs)
+//R__LOAD_LIBRARY(/home/kmseo/Works/muon_3.1.2/shlib/Linux5.14-GCC_11_4/libMuonObjs.so)
+R__LOAD_LIBRARY(/home/kkw/muon_3.1.2/shlib/Linux5.14-GCC_11_4/libMuonObjs.so)
+
+
+
+//void trg_calculation_sub_pbs(int subfile=0)
+void trg_calculation_sub_pbs(int subfile=0)
+{
+
+  int p = 14;
+
+  //
+  gStyle -> SetOptStat(0);
+
+  const int fn = 30;
+
+    /* //16
+  int run[fn] = {287, 288, 294, 303, 304, 311, 315, 318, 327, 330, 339, 343, 356, 361, 368};
+  int finsub[fn] = {93, 525, 76, 1154, 791, 190, 191, 689, 282, 695, 286, 94, 667, 143, 332};
+    */
+  //int daygap[fn] = {6, 10, 35, 40, 89, 122, 130, 138, 167, 179, 231, 244, 250, 305, 311};  
+
+
+  int run[fn] = {287, 288, 294, 298, 303, 304, 315, 318, 327, 330, 339, 341, 343, 355, 356, 361, 368, 376, 401, 404, 405, 407, 409, 411, 413, 416, 426, 429, 435};
+  int finsub[fn] = {93, 525, 76, 30, 1154, 791, 191, 689, 282, 695, 287, 19, 94, 22, 667, 143, 332, 18, 169, 63, 68, 23, 44, 72, 20, 16, 338, 15, 474};
+    //  int finsub[fn] = {1, 1, 76, 1154, 791, 190, 191, 689, 282, 695, 286, 94, 667, 143, 332, 18, 169, 63, 68, 23, 44, 72, 20, 16, 338, 15, 474};
+
+    int irun = run[p];
+    int ifinsub = finsub[p];
+ 
+   TFile *of;
+
+   //   for(int ifile=0; ifile<fn; ifile++){
+   //   for(int ifile=0; ifile<2; ifile++){
+   
+  TTree * value = new TTree("value","value");
+  //  TTree * charge = new TTree("charge","charge");
+
+  double trgtime, rate, m_rate;
+  int counts, sub, sum;
+  
+  // value->Branch("sub",&sub,"sub/I");
+  value->Branch("trgtime",&trgtime,"trgtime/D");
+  //  value->Branch("counts",hit,"hit[48]/I"); 
+  value->Branch("counts",&counts,"counts/I"); 
+  value->Branch("rate",&rate,"rate/D");  
+  value->Branch("m_rate", &m_rate, "m_rate/D");
+
+  
+  double itime, ftime;
+  double divtime = 10000000000; //10s
+  TString text;
+
+  TChain *chain = new TChain("prd_wcd");
+
+  //  for(int sub=0; sub<=ifinsub; sub++){
+  //  for(int sub=0; sub<=0; sub++){
+    chain -> Add(Form("/home/PROD/WCMD/%06d/prd_wcd_%06d_%05d.root",irun,irun,subfile));
+    //  }
+  
+  int tent = chain->GetEntries();
+
+  chain->GetEntry(0);
+  double iitime = chain->GetLeaf("fTriggerTime")->GetValue();
+
+  chain->GetEntry(tent-1);
+  ftime = chain->GetLeaf("fTriggerTime")->GetValue();
+
+  int lp = (int) ((ftime-iitime)/divtime);
+
+  if(subfile==0){  sum=0;}
+  else{
+    //    sum=0;
+    TChain *pchain = new TChain("prd_wcd");
+    for(int isub=0; isub<subfile; isub++){
+    pchain -> Add(Form("/home/PROD/WCMD/%06d/prd_wcd_%06d_%05d.root",irun,irun,isub));
+    //    sum = sum + (pchain->GetEntries());
+    //    cout<<isub<<endl;
+    //    cout<<sum<<endl;
+      }
+    sum = sum + (pchain->GetEntries());
+    //    cout<<sum<<endl;
+  }
+  
+  cout<<sum<<endl;
+  for(int i=0; i<lp; i++){
+    //   cout<<i<<endl;
+    itime = iitime + i * divtime;
+    //          for(int i=0; i<1000; i++){      
+    if(i%100==0){cout<<i<<" ent process..."<<endl;}
+    //          cout<<i<<endl;
+
+    text = Form("fTriggerTime>%f&&fTriggerTime<%f",itime, itime+divtime);
+    //   cout<<text<<endl;
+    counts = chain->GetEntries(text);
+    //   cout<<counts<<endl;
+     sum = sum+counts;
+    //  cout<<sum<<endl;
+    rate = ((double) counts)/(divtime/1000000000);
+    m_rate = ((double) sum)/((itime+divtime)/1000000000);
+    //   cout<<rate<<endl;
+    //  cout<<m_rate<<endl;
+    trgtime = itime/1000000000.;
+    value->Fill();
+
+    
+  }
+    //    hmean->SetBinContent(proc+1,mean_r1);
+
+  TString outfile = Form("./div/run%i/run%i_rate_10s_%05d.root",irun,irun,subfile); 
+    of = new TFile(outfile.Data(), "RECREATE");
+
+    //    rhis1->Write();
+
+    value->Write();
+    of->Close(); 
+    //  }
+}

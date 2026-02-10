@@ -1,0 +1,33 @@
+#include "MuonObjs/PSHit.hh"
+
+ClassImp(PSHit)
+
+PSHit::PSHit()
+    : TObject()
+{
+  fID = 0;
+  fNCh = 0;
+  fQsum = 0;
+  memset(fQ, 0, 4 * sizeof(double));
+}
+
+PSHit::PSHit(int id)
+    : TObject()
+{
+  fID = id;
+  fNCh = 0;
+  fQsum = 0;
+  memset(fQ, 0, 4 * sizeof(double));
+}
+
+PSHit::PSHit(const PSHit & hit)
+    : TObject(hit)
+{
+  fID = hit.GetID();
+  fNCh = hit.GetNCh();
+  fQsum = hit.GetQsum();
+  for (int i = 0; i < fNCh; i++)
+    fQ[i] = hit.GetQ(i);
+}
+
+PSHit::~PSHit() {}

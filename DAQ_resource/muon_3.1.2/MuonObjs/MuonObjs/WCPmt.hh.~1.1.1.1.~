@@ -1,0 +1,57 @@
+#ifndef WCPmt_hh
+#define WCPmt_hh
+
+#include "TObject.h"
+
+class WCPmt : public TObject {
+public:
+  WCPmt();
+  WCPmt(int id);
+  WCPmt(const WCPmt & WCPmt);
+  virtual ~WCPmt();
+
+  void SetID(int id);
+  void SetPedMean(double ped);
+  void SetPedRMS(double rms);
+  void SetQ(double q);
+  void SetFmax(double f);
+  void SetFmaxx(int x);
+  void SetIBin(int x);
+
+  int GetID() const;
+  double GetPedMean() const;
+  double GetPedRMS() const; 
+  double GetQ() const;
+  double GetFmax() const;
+  int GetFmaxx() const;
+  int GetIBin() const;
+
+private:
+  int fID;
+  double fPedMean;
+  double fPedRMS;
+  double fQ;
+  double fFmax;
+  int fFmaxx;
+  int fIBin;
+
+  ClassDef(WCPmt, 1)
+};
+
+inline void WCPmt::SetID(int id) { fID = id; }
+inline void WCPmt::SetPedMean(double q) { fPedMean = q; }
+inline void WCPmt::SetPedRMS(double q) { fPedRMS = q; }
+inline void WCPmt::SetQ(double q) { fQ = q; }
+inline void WCPmt::SetFmax(double q) { fFmax = q; }
+inline void WCPmt::SetFmaxx(int q) { fFmaxx = q; }
+inline void WCPmt::SetIBin(int q) { fIBin = q; }
+
+inline int WCPmt::GetID() const { return fID; }
+inline double WCPmt::GetPedMean() const { return fPedMean; }
+inline double WCPmt::GetPedRMS() const { return fPedRMS; }
+inline double WCPmt::GetQ() const { return fQ; }
+inline double WCPmt::GetFmax() const { return fFmax; }
+inline int WCPmt::GetFmaxx() const { return fFmaxx; }
+inline int WCPmt::GetIBin() const { return fIBin; }
+
+#endif

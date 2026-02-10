@@ -1,0 +1,176 @@
+R__LOAD_LIBRARY(libHist)
+//R__LOAD_LIBRARY(../lib/libRawObjs)
+
+
+
+void gainfit_1st()
+{
+
+  //gStyle->SetOptFit(1);
+  //gStyle->SetOptStat(0);
+  
+  int run = 330;
+  int evt, det;
+  int fid[124];
+  int tch = 124*4;
+  int tdet = 124;
+  //  int tch = 88;//bot
+  //  int tdet = 22;//bot
+  double q[tdet][4], q_cal[tdet][4];
+
+  double gain_ref, gain[4];
+
+
+  //  TFile * hf  = new TFile(Form("./gain/qhis_%06d_all.root",run),"READ");
+  TFile * hf  = new TFile("./gain/qhis_psmd_bot.root","READ");
+  TCanvas * can = new TCanvas("can","",800,600);  
+  //TFile * out = new TFile(Form("./gain/gain_%06d.root",run), "recreate");
+  //  TFile * out = new TFile("./gain/gain_psmd_bot.root", "recreate");  
+  //  TTree * tree = new TTree("gain", "");
+  /*
+  tree->Branch("det", &det, "det/I");
+  tree->Branch("gain", gain, "gain[4]/D");
+  */
+  
+  TH1D *qhis[tdet][4], *qcal[tdet][4];
+  
+  for(int i = 48; i <= 58; i++) {//48-58, 113-123
+    for(int j=0; j<4; j++){
+      qhis[i][j]=(TH1D*)hf->Get(Form("qhis_d%i_c%i",i,j+1));
+      //      cout<<"hist "<<i<<" loaded"<<endl;
+      qhis[i][j]=(TH1D*)qhis[i][j]->Rebin(2,Form("qhis_d%i_c%i",i,j+1)); // 500 bin
+      //      qhis[i][j] = new TH1D(Form("qhis_d%i_c%i", i, j+1), "", 1100, -100, 1000);
+      //      qcal[i][j] = new TH1D(Form("qcal_d%i_c%i", i, j+1), "", 1100, -100, 1000);
+    }
+  }
+  for(int i = 113; i <= 123; i++) {//113-123 det num
+    for(int j=0; j<4; j++){
+      qhis[i][j]=(TH1D*)hf->Get(Form("qhis_d%i_c%i",i,j+1));
+      //      qhis[i][j]=(TH1D*)hf->Get(Form("qhis_d%i_c%i",i-5,j+1));
+      //            cout<<"hist "<<i<<" loaded"<<endl;
+      qhis[i][j]=(TH1D*)qhis[i][j]->Rebin(2,Form("qhis_d%i_c%i",i,j+1)); // 500 bin
+      //      qhis[i][j] = new TH1D(Form("qhis_d%i_c%i", i, j+1), "", 1100, -100, 1000);
+      //      qcal[i][j] = new TH1D(Form("qcal_d%i_c%i", i, j+1), "", 1100, -100, 1000);
+    }
+  }
+  
+  TH1D *gainhis = new TH1D("gainhis", "", 50, 20, 180);
+  TH1D *gainhis2 = new TH1D("gainhis2", "", 50, 20, 180);
+
+  //--------------------------------first fit----------------------
+
+  
+  char a;
+  int maxbin[4];
+  double maxx[4], upper[4], lower[4], std[4], cons[4], stdv[4];
+
+
+  for(int i = 0; i < tdet; i++) {
+    if((i>=48&&i<=58)||(i>=113&&i<=123)){
+      //    if(i==48){    
+
+      for(int j=0; j<4; j++){
+	//      can->cd();
+	//      qhis[i][j]->Draw();
+	qhis[i][j]->GetXaxis()->SetRangeUser(30,300);
+	maxbin[j] = qhis[i][j]->GetMaximumBin();
+	maxx[j] = qhis[i][j]->GetBinCenter(maxbin[j]);
+	std[j] = qhis[i][j]->GetStdDev();
+
+	//	upper[j] = maxx[j] + std[j];
+	//	lower[j] = maxx[j] - std[j];
+		upper[j] = maxx[j] + 50;
+		lower[j] = maxx[j] - 50;
+
+	
+	qhis[i][j]->GetXaxis()->SetRangeUser(-100,1000);
+	//		cout<<""<<endl;
+	//		cout<<"maxx:std:upper:lower "<<maxx[j]<<" : "<<std[j]<<" : "<<upper[j]<<" : "<<lower[j]<<endl;
+	
+	TF1 *f1 = new TF1("f1", "gaus", lower[j], upper[j]);
+    
+	qhis[i][j]->Fit(f1, "RQ0");
+	//	qhis[i][j]->Fit(f1, "R");	
+    
+	cons[j] = f1->GetParameter(0);
+	gain[j] = f1->GetParameter(1);
+	stdv[j] = f1->GetParameter(2);
+	/*
+	qhis[i][j]->Draw();
+	can->Update();
+	cin>>a;
+	*/
+	
+
+	//	upper[j] = maxx[j] + 1.5*stdv[j];
+	//	lower[j] = maxx[j] - 1.5*stdv[j];
+	upper[j] = maxx[j] + 0.7*stdv[j];
+	lower[j] = maxx[j] - 0.7*stdv[j];
+	//	upper[j] = maxx[j] + 20;
+	//	lower[j] = maxx[j] - 20;
+
+	
+	
+	TF1 *f2 = new TF1("f2", "gaus", lower[j], upper[j]);
+
+	f2->SetParameter(0, cons[j]);
+	f2->SetParameter(1, gain[j]);
+	f2->SetParameter(2, stdv[j]);
+    
+		qhis[i][j]->Fit(f2, "RQ");
+		//	qhis[i][j]->Fit(f2, "R");
+    
+	
+	gain[j] = f2->GetParameter(1);
+    
+	//	cout << " fid : ch : gain: " << fid[i] << ": " << j+1<<" : " <<gain[j] << endl;
+
+	//    gainhis->Fill(gain);
+			can->cd();
+		qhis[i][j]->Draw();
+		can->Update();
+		cin>>a;
+		if(a=='q') {goto END;}
+      }
+      //      det=i;
+      //      tree->Fill();
+
+
+      
+    //cout <<"gain1: " << i+1 << ": " << cons << ": " << gain1 << ": " << stdv << endl;   
+    }
+  }
+  /*
+  for(int i = 0; i < 384; i++) {
+
+    int maxbin = qhis[i]->GetMaximumBin();
+    double maxx = qhis[i]->GetBinCenter(maxbin);
+
+    double upper; 
+    double lower;
+
+    upper = maxx + 1.5*stdv;
+    lower = maxx - 1.5*stdv;
+      
+    TF1 *f2 = new TF1("f2", "gaus", lower, upper);
+    f2->SetParameter(0, cons);
+    f2->SetParameter(1, gain1[i]);
+    f2->SetParameter(2, stdv);
+    
+    qhis[i]->Fit(f2, "RQ");
+    
+    gain2[i] = f2->GetParameter(1);
+    
+    cout << "gain2: " << i+1 << ": " << gain2[i] << endl;
+    Sid = i;
+    gain = gain2[i];
+
+    gainhis->Fill(gain);
+    
+    tree->Fill();
+  }
+  */
+
+ END:
+ cout << "terminated by user" << endl;
+} 

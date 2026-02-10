@@ -1,0 +1,126 @@
+000330
+000330 
+330 
+576 
+root.00572
+2024-05-24 05:54:07 [STAT] 0 events triggered [ 6077872 | 6077850 / 0.0( 3.0)
+3.0
+05:54:07
+root.00573
+2024-05-24 06:54:07 [STAT] 0 events triggered [ 6090114 | 6090086 / 0.0( 3.0)
+3.0
+06:54:07
+root.00574
+2024-05-24 07:54:07 [STAT] 0 events triggered [ 6102152 | 6102152 / 0.0( 3.0)
+3.0
+07:54:07
+root.00575
+2024-05-24 08:54:08 [STAT] 0 events triggered [ 6114852 | 6114852 / 0.0( 3.0)
+3.0
+08:54:08
+root.00576
+2024-05-24 09:54:08 [STAT] 0 events triggered [ 6126960 | 6126928 / 0.0( 3.0)
+3.0
+09:54:08
+root.00572
+2024-05-24 05:54:08 [STAT] 0 events triggered [111300284 | 58976135 / 0.0( 54.1)
+54.1
+05:54:08
+root.00573
+2024-05-24 06:54:07 [STAT] 32 events triggered [111486916 | 59074917 / 48.6( 54.0)
+54.0
+06:54:07
+root.00574
+2024-05-24 07:54:07 [STAT] 56 events triggered [111673160 | 59173366 / 45.4( 54.0)
+54.0
+07:54:07
+root.00575
+2024-05-24 08:54:07 [STAT] 36 events triggered [111859168 | 59271742 / 40.7( 54.0)
+54.0
+08:54:07
+root.00576
+2024-05-24 09:54:07 [STAT] 0 events triggered [112044440 | 59369867 / 0.0( 54.0)
+54.0
+09:54:07
+root.00572
+2024-05-24 05:54:07 [STAT] 64 events triggered [111300316 | 52537254 / 41.8( 54.1)
+54.1
+05:54:07
+root.00573
+2024-05-24 06:54:07 [STAT] 0 events triggered [111486908 | 52625459 / 0.0( 54.0)
+54.0
+06:54:07
+root.00574
+2024-05-24 07:54:08 [STAT] 64 events triggered [111673168 | 52713634 / 42.8( 54.0)
+54.0
+07:54:08
+root.00575
+2024-05-24 08:54:07 [STAT] 48 events triggered [111859196 | 52801632 / 50.7( 54.0)
+54.0
+08:54:07
+root.00576
+2024-05-24 09:54:08 [STAT] 56 events triggered [112044492 | 52889161 / 52.8( 54.0)
+54.0
+09:54:08
+3.0
+test
+330 
+576 
+0
+
+Processing report_wcd.C...
+11716
+Info in <TCanvas::Print>: png file ./figure/wcmd_chbit.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_1.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_2.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_3.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_4.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_5.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_6.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_7.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_8.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_9.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_10.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_11.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_12.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_13.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_14.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_15.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_16.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_17.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_18.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_19.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_20.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_21.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_22.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_23.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_24.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_25.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_26.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_27.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_28.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_29.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_30.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_31.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_32.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_33.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_34.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_35.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_36.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_37.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_38.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_39.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_40.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_41.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_42.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_43.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_44.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_45.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_46.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_47.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_48.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_ped_time_49.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_mul.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_hmap1.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_hmap2.png has been created
+Info in <TCanvas::Print>: png file ./figure/wcmd_qsum.png has been created

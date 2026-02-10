@@ -1,0 +1,112 @@
+R__LOAD_LIBRARY(libHist)
+R__LOAD_LIBRARY(libRawObjs)
+
+double dgaus(double *v, double *p){
+  double x = v[0];
+
+  double a = p[0];
+  double b = p[1];
+  double c = p[2];
+  double d = p[3];
+  double e = p[4];
+  double f = p[5];
+
+  return a*TMath::Gaus(x, b, c)+d*TMath::Gaus(x, e, f);
+}
+
+void qmax_wcd(int run=434)
+{
+
+  int runnum[23] ={
+    282, 283, 301, 307, 359,
+    363, 367, 374, 378, 380,
+    393, 397, 400, 403, 408,
+    412, 415, 417, 425, 428,
+    434, 437, 444};
+
+  //  for(int irun=0; irun<23; irun++){
+  for(int irun=0; irun<20; irun++){    
+    run=runnum[irun];
+    cout<<"runnum "<<run<<endl;
+    TStopwatch tsw;
+  tsw.Start();
+
+  const int nped = 100;
+  const int head = 6;
+  const int tail = 12;
+  
+  TChain * t = new TChain("AbsEvent");
+  //  t->Add(Form("/y/kmseo/data/WCMD/PMTCalib/HV_%dV.root.00000", HV));
+  t->Add(Form("/data/amore2test/RAW/%06d/FADC_%06d.root.00000", run, run));    
+
+  FChannelData * data = new FChannelData();
+  t->SetBranchAddress("FChannelData", &data);
+
+  TH1D * his[48];
+  for (int i = 0; i < 48; i++)
+    his[i] = new TH1D(Form("qmax_%d", i+1), "", 1000, 0, 1000);
+  
+  int nevt = t->GetEntries();
+  cout << nevt << endl;
+  for (int i = 0; i < nevt; i++) {
+    if (i % 10000 == 0 && i > 0)
+      cout << Form("%6d events processed ...", i) << endl;
+
+    t->GetEntry(i);
+
+    int nch = data->GetN();
+    for (int j = 0; j < nch; j++) {
+      FChannel * ch = data->Get(j);
+      int ndp = ch->GetNdp();
+      int id = ch->GetID();
+
+      const unsigned short * wave = ch->GetWaveform();
+      double ped = 0;
+      for (int k = 0; k < nped; k++) {
+	ped += wave[k];
+      }
+      ped = ped / 100;
+
+      double fmax = -9999999;
+      int fmaxx = 0;
+      for (int k = nped; k < ndp; k++) {
+	if (wave[k] - ped > fmax) {
+	  fmax = wave[k] - ped;
+	  fmaxx = k;
+	}
+      }
+
+      fmax = 0;
+      for (int k = fmaxx-head; k < fmaxx+tail; k++)
+	fmax += wave[k] - ped;
+      his[j] -> Fill(fmax);
+    }
+  }
+
+  // TF1 *ffunc = new TF1("ffunc", dgaus, 0, 80, 6);
+  // ffunc -> SetParameter(0, 1000);
+  // ffunc -> SetParameter(1, 5.7);
+  // ffunc -> SetParameter(2, 6);
+  // ffunc -> SetParameter(3, 100);
+  // ffunc -> SetParameter(4, 48);
+  // ffunc -> SetParameter(5, 18);
+  // his[0] -> Fit(ffunc, "R0");
+
+  TCanvas *can = new TCanvas("can", "", 1800, 1400);
+  can -> Divide(7, 7);
+  for(int i = 0; i < 47; i++){
+    can -> cd(i+1);
+    his[i] -> Draw();
+  }
+
+  //  TFile of(Form("./hist/QmaxDist_%dV.root", HV), "recreate");
+  TFile of(Form("./hist/QmaxDist_%06d.root", run), "recreate");  
+  for(int i = 0; i < 47; i++)
+    his[i] -> Write();
+  of.Close();
+  
+  tsw.Stop();
+  tsw.Print();
+  }
+
+  }

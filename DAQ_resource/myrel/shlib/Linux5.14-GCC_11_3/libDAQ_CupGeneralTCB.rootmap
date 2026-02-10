@@ -1,0 +1,4 @@
+[ libDAQ.so ]
+# List of selected classes
+class CupGeneralTCB
+header DAQ/CupGeneralTCB.hh

@@ -1,0 +1,4 @@
+[ libMuonObjs.so ]
+# List of selected classes
+class WCPmt
+header MuonObjs/WCPmt.hh

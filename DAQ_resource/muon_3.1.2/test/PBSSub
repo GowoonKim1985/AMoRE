@@ -1,0 +1,115 @@
+#!/usr/bin/perl -w
+
+use Time::Local;
+use Term::Complete;
+
+
+print "\n Job Name (default PBSSub): "; $jobname=<STDIN>;
+
+if(!$jobname){
+  $jobname = "PBSSub";
+}
+
+chomp($jobname);
+
+@terms = `ls`;
+chomp(@terms);
+$sscript = Complete("\n Run Shell Script         : ", @terms);
+
+chomp($sscript);
+@srptArry = split(' ', $sscript);
+if( ! -e $srptArry[0] ){
+  die("\n\t There is no $srptArry[0] in this directory!!! \n\n");
+} elsif( ! -x $srptArry[0]){
+  die("\n\t $srptArry[0] is not executable!!! \n\n");
+}
+@args = @srptArry;
+shift @args;
+
+print "\n First Run Section Number : "; $ifirst=<STDIN>;
+chomp($ifirst);
+if($ifirst < 0){
+  die("\n\t First Run Section should be greater than 0!!! \n\n");
+}
+
+print "\n Last Run Section Number  : "; $ilast=<STDIN>;
+chomp($ilast);
+if($ilast < $ifirst){
+  die("\n\t Last Run Section should be greater than First Run Section!!! \n\n");
+}
+
+#print "\n PBS Queue Name            \n";
+#print "\t 1 : Short     ( 12 hours) \n";
+#print "\t 2 : Medium    ( 48 hours) \n";
+#print "\t 3 : Long      ( 96 hours) \n";
+#print "\t 4 : Very Long (240 hours) \n";
+#print "\n Select PBS Queue        : "; $nqueue=<STDIN>;
+#chomp($nqueue);
+#if($nqueue > 4 || $nqueue < 1){
+#  die("\n\t You Select Invalid Queue!!! \n");
+#}
+
+print "\n\n\n";
+
+my $dir = $ENV{"PWD"};
+
+my $script = $srptArry[0];
+my $first = $ifirst;
+my $last  = $ilast;
+my $queue;
+SWITCH: {
+  $nqueue == 1 and $queue = "short";
+  $nqueue == 2 and $queue = "medium";
+  $nqueue == 3 and $queue = "long";
+  $nqueue == 4 and $queue = "verylong";
+}
+
+my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday);
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday) = localtime();
+$year = $year + 1900;
+
+my $user = $ENV{"USER"};
+my $date = $year."-".$mon."-".$mday."-".$hour."-".$min."-".$sec;
+
+my $tarball = "TMP_".$user."_".$date."_".$jobname.".tgz";
+
+
+system("tar czf $tarball $script");
+system("mv $dir/$tarball /scratch/pbs/$user");
+
+
+$num = 0;
+foreach $section ($first..$last){
+  $subscript = $dir."/".$jobname.$section;
+  open(OUTFILE, ">$subscript");
+  print OUTFILE ("#!/bin/csh                                                            \n");
+  print OUTFILE ("set nodename=`hostname`                                               \n");
+  print OUTFILE ("setenv BASEDIR /scratch/pbs/anybodies                                 \n");
+  print OUTFILE ("set pbsuser=\$USER                                                    \n");
+  print OUTFILE ("set pbsdate=`date +\"%Y-%m-%d\"`                                      \n");
+  print OUTFILE ("set workdir=\${BASEDIR}/TMP_\${pbsuser}_\${pbsdate}_$jobname$section  \n");
+  print OUTFILE ("if( -d \$workdir) then                                                \n");
+  print OUTFILE ("    rm -rf \$workdir                                                  \n");
+  print OUTFILE ("endif                                                                 \n");
+  print OUTFILE ("mkdir \$workdir                                                       \n");
+  print OUTFILE ("cp /scratch/pbs/\${pbsuser}/$tarball \$workdir                        \n");
+  print OUTFILE ("cd \$workdir                                                          \n");
+  print OUTFILE ("tar xzf $tarball                                                      \n");
+  print OUTFILE ("./$script $section @args                                              \n");
+  print OUTFILE ("cd ..                                                                 \n");
+  print OUTFILE ("rm -rf \$workdir                                                      \n");
+  close(OUTFILE);
+
+  system("chmod 755 $subscript");
+
+  system("/usr/bin/qsub -q batch $subscript");
+
+  system("rm -f $subscript");
+
+  $num++;
+}
+
+
+system("/usr/bin/qstat");
+
+print "\n\n\t Submit $num Jobs (section $first to $last). \n\n\n";

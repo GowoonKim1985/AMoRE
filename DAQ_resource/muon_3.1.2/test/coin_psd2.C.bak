@@ -1,0 +1,102 @@
+TChain *pchain[2];
+PSEvent *pevt[2];
+int nevt_d1[2] = {0, 0};
+
+double CheckCoinBot(int daq, int evt, double ptime, bool flag)
+{
+  double time = 0;
+
+  int range_idd[2][2] = {{48, 58}, {113, 123}};
+  int nevt = pchain[daq] -> GetEntries();
+  for(int i = evt+1; i < nevt; i++){
+    pchain[daq] -> GetEntry(i);
+
+    int nch = pevt[daq] -> GetN();
+    double ptime_d = pevt[daq] -> GetTriggerTime();
+    //cout << ptime_d/1e9 << " " << ptime/1e9 << " " << (ptime_d-ptime)/1e9 << endl;
+    if(ptime_d-ptime > 1e3){
+      if(flag == false)
+	nevt_d1[daq] = i;
+      break;
+    }
+    //cout << ptime_d/1e9 << " " << ptime/1e9 << " " << (ptime_d-ptime)/1e9 << endl;
+    for(int j = 0; j < nch; j++){
+      PSHit *hit = pevt[daq] -> Get(j);
+      
+      int id = hit -> GetID();
+      if(id >= range_idd[daq][0] && id <= range_idd[daq][1]){
+	time = pevt[daq] -> GetTriggerTime();
+
+	if(flag == false)
+	  nevt_d1[daq] = i;
+      }
+      else continue;
+    }
+  }
+
+  //cout << time << endl;
+  if(time != 0)
+    time -= ptime;
+  return time;
+}
+
+void coin_psd(int runnum = 327)
+{
+  int pnevt[2];
+  for(int i = 0; i < 2; i++){
+    pchain[i] = new TChain("prd_psd");
+    pchain[i] -> Add(Form("/data/kmseo/PSMD/%06d/prd_psd_daq%d_%06d_*.root", runnum, i+1, runnum));
+    pevt[i] = new PSEvent();
+    pchain[i] -> SetBranchAddress("PSEvent", &pevt[i]);
+    
+    pnevt[i] = pchain[i] -> GetEntries();
+  }
+
+  TH1D *htime = new TH1D("htime", "", 200, -1000, 1000);
+  
+  int nevt[2] = {static_cast<int>(pchain[0] -> GetEntries())/100,
+                 static_cast<int>(pchain[1] -> GetEntries())/100};
+  //cout << nevt[0] << " " << nevt[1] << endl;
+  int range_id[2][2] = {{0, 48}, {65, 113}};
+  bool flag_side = false;
+  bool flag_coin = false;
+  double ptime, qsum;
+  for(int i = 0; i < 2; i++){
+    cout << nevt[i] << endl;
+    
+    for(int j = 0; j < nevt[i]; j++){
+      if(j != 0 && j%1000000 == 0) cout << j << endl;
+      
+      pchain[i] -> GetEntry(j);
+
+      int nch = pevt[i] -> GetN();
+      ptime = pevt[i] -> GetTriggerTime();
+      for(int k = 0; k < nch; k++){
+	qsum = 0;
+	
+	PSHit *hit = pevt[i] -> Get(k);
+	if(!hit) continue;
+	
+	for(int l = 0; l < 4; l++)
+	  qsum += hit -> GetQ(l);
+	if(qsum < 20000) continue;
+	
+	int id = hit -> GetID();
+	if(id > range_id[i][0] && id < range_id[i][1]){
+	  double ctime = CheckCoinBot(i, j, ptime, true);
+	  // if(ctime == 0)
+	  //   ctime = CheckCoinBot(1-i%2, nevt_d1[1-i%2], ptime, false);
+	  if(ctime == 0)
+	    continue;
+	  else{
+	    //cout << ctime << endl;
+	    htime -> Fill(ctime);
+	  }
+	}
+      }
+    }
+  }
+
+  TCanvas *can = new TCanvas("can", "", 800, 600);
+  htime -> Draw();
+}

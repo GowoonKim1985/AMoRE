@@ -1,0 +1,164 @@
+R__LOAD_LIBRARY(libHist)
+R__LOAD_LIBRARY(libRawObjs)
+//R__LOAD_LIBRARY(libMuonObjs)
+R__LOAD_LIBRARY(/home/kmseo/Works/muon_3.1.2/shlib/Linux5.14-GCC_11_4/libMuonObjs.so)
+
+int tbin;
+double q, qa[0], pt, ttime;
+
+void Init()
+{
+  tbin = 0;
+  q = 0;
+  pt = 0;
+  for(int i = 0; i < 10; i++)
+    qa[i] = 0;
+}
+
+void fQaIntegration(TH1D *wave)
+{
+  int nbin = wave -> GetNbinsX();
+  int max = wave -> GetMaximum();
+  int aaa, sbin; 
+  tbin = wave -> GetMaximumBin();
+
+  for(int k = tbin-10; k < nbin; k++){
+    aaa = wave -> GetBinContent(k+1);
+    if(aaa > max*0.1){
+      sbin = k;
+      break;
+    }
+  }
+  for(int k = 0; k < 10; k++){
+    if(k == 0)
+      qa[k] = wave -> GetBinContent(tbin);
+    else
+      qa[k] = wave -> Integral(sbin, tbin+k*2);
+  }
+}
+
+void fPulseTime(TH1D *wave)
+{
+  TGraph *grp = new TGraph();
+  TF1 *fitfunc = new TF1("fitfunc", "pol1", 20, 35);
+
+  grp -> Set(0);
+  double rms = 0;
+  for(int k = 0; k < 25; k++)
+    rms += TMath::Power(wave -> GetBinContent(k+1), 2);
+  
+  rms /= 25;
+  rms = TMath::Sqrt(rms);
+  //cout << "RMS: " << rms << endl;
+  int np = 0;
+  int maxx = tbin;
+  int max = wave -> GetMaximum();
+  int binc;
+  double val, p0, p1;
+  while(1){
+    maxx--;
+    
+    binc = wave -> GetBinContent(maxx);
+    if(binc < rms || maxx < 10){
+      //cout << binc << " " << rms << " " << maxx << endl;
+      break;
+    }
+    val = TMath::Sqrt(-TMath::Log((double)binc/max));
+    grp -> SetPoint(np, maxx, val);
+    // cout << np << " " << maxx << " " << val
+    // 	 << " " << binc << " " << max << endl;
+    np++;
+  }
+  
+  if(grp -> GetN() > 3){
+    grp -> Fit(fitfunc, "0QG");
+    
+    p0 = fitfunc -> GetParameter(0);
+    p1 = fitfunc -> GetParameter(1);
+    
+    pt = (TMath::Sqrt(-TMath::Log(0.5))-p0)/p1;
+    //cout << pt << " " << p0 << " " << p1 << endl;
+  }
+  else
+    pt = -1;
+
+  delete grp;
+  delete fitfunc;
+}
+
+void prod_psd(int subrun, int daqtype = 1)
+{
+  int run = 216;
+  
+  const int nthreads = 20;
+  ROOT::EnableImplicitMT(nthreads);
+
+  int nent;
+  
+  TChain * chain = new TChain("AbsEvent");
+  chain->Add(Form("/x/amore2test/RAW/%06d/IADC%d_%06d.root.%05d", run, daqtype, run, subrun));
+  if(chain == NULL){
+    cout << "!" << endl;
+    return 0;
+  }
+ 
+  EventInfo * info = new EventInfo();
+  FChannelData * data = new FChannelData();
+  chain->SetBranchAddress("EventInfo", &info);
+  chain->SetBranchAddress("FChannelData", &data);
+
+  PSEvent * pevent = new PSEvent();
+  TFile * out = new TFile(Form("/y/kmseo/data/PSMD/%06d/prd_psd_daq%d_%06d_%05d.root", run, daqtype, run, subrun), "recreate");
+  TTree * otree = new TTree("prd_psd", "prd_psd");
+  otree->Branch("PSEvent", &pevent);
+
+  int id, did;
+  int nbinsx;
+  unsigned short *adc = new unsigned short[nbinsx];
+  nent = nent > 0 ? nent : chain->GetEntries();
+  cout << nent << endl;
+  for (int i = 0; i < nent; i++) {
+    if (i > 0 && i % 200000 == 0)
+      cout << Form("%6d event processed ...", i) << endl;
+
+    Init();
+    chain->GetEntry(i);
+
+    if (info->GetTriggerType() == 1) continue;
+
+    pevent->Clear();
+    pevent->SetEventNumber(info->GetTriggerNumber());
+    pevent->SetTriggerTime(info->GetTriggerTime());
+
+    int nch = data->GetN();
+    for (int j = 0; j < nch; j++) {
+      FChannel * ch = data->Get(j);
+      id = ch->GetID()-1;
+
+      nbinsx = ch -> GetNdp();
+      adc = (unsigned short*)ch -> GetWaveform();
+
+      q = 0;
+      for(int k = 0; k < nbinsx; k++){
+	q += adc[k];
+
+      }
+      //q = ch->GetWaveformHist()->Integral();
+
+      fQaIntegration(ch -> GetWaveformHist());
+      fPulseTime(ch -> GetWaveformHist());
+      
+      did = id / 4;
+
+      PSHit * hit = pevent->GetByID(did);
+      if (!hit) hit = pevent->Add(did);
+
+      hit->AddQ(q, tbin, &qa[0], pt);
+    }
+
+    otree->Fill();
+  }
+
+  otree->Write();
+  out->Close();
+}

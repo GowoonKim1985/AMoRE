@@ -1,0 +1,125 @@
+R__LOAD_LIBRARY(libHist)
+R__LOAD_LIBRARY(libRawObjs)
+R__LOAD_LIBRARY(/home/kmseo/Works/muon_3.1.2/shlib/Linux5.14-GCC_11_4/libMuonObjs.so)
+
+void prod_wcd(int subrun = 0)
+{
+  int runnum = 216;
+
+  TStopwatch t;
+  t.Start();
+  
+  TChain * chain = new TChain("AbsEvent");
+  //chain -> Add(Form("/x/kkw/data/20230810_MTH10RL16TH5.root.%05d", subrun));
+  chain -> Add(Form("/x/amore2test/RAW/%06d/FADC_000216.root.%05d", runnum, subrun));
+  if(chain == NULL){
+    cout << "!" << endl;
+    return 0;
+  }
+
+  EventInfo * info = new EventInfo();
+  FChannelData * data = new FChannelData();
+  chain->SetBranchAddress("EventInfo", &info);
+  chain->SetBranchAddress("FChannelData", &data);
+
+  WCEvent *wevent = new WCEvent();
+  
+  
+  int nch, id[48];
+  const int nbinsx = 1008;
+  unsigned short *adc = new unsigned short[nbinsx];
+  unsigned short ped;
+  double rms, trgtime;
+  double qtot[48] = {0};
+  double qmax[48] = {0};
+  int qmaxx[48] = {0};
+  //int fmax[48][10] = {0};
+  int tbit[48] = {0};
+  int npeaks[48] = {0};
+  //int maxx[48][10] = {0};
+  int nbit, fskip, nskip, dum, adcp, dd;
+  char a;
+
+  TTree *tree = new TTree("tree", "tree");
+  tree -> Branch("qtot", qtot, "qtot[48]/D");
+  tree -> Branch("qmax", qmax, "qmax[48]/D");
+  tree -> Branch("qmaxx", qmaxx, "qmaxx[48]/I");
+  // tree -> Branch("fmax", fmax, "fmax[48][10]/I");
+  // tree -> Branch("maxx", maxx, "maxx[48][10]/I");
+  tree -> Branch("tbit", tbit, "tbit[48]/I");
+  tree -> Branch("trgtime", &trgtime, "trgtime");
+  tree -> Branch("npeaks", npeaks, "npeaks[48]/I");
+  tree -> Branch("id", id, "id[48]/I");
+
+  int nevt = chain -> GetEntries();
+  cout << nevt << endl;
+  for (int i = 0; i < nevt; i++) {
+    chain->GetEntry(i);
+    if(i != 0 && i%100000 == 0) cout << i << endl;
+    nbit = 0;
+
+    trgtime = info -> GetTriggerTime();
+    //cout << trgtime << endl;
+    nch = data -> GetN();
+    //cout << "nch: " << nch << " in event " << i << endl;
+    for(int j = 0; j < nch; j++){
+      //can -> cd(j+1);
+      FChannel * ch = data->Get(j);
+      id[j] = ch -> GetID()-1;
+      tbit[id[j]] = ch -> GetBit();
+      nbit += (int)tbit[id[j]];
+      ped = ch -> GetPedestal();
+      rms = 0;
+      npeaks[id[j]] = 0;
+      qtot[id[j]] = 0;
+
+      if(tbit[id[j]] != 1) continue;
+      
+      ch = data->Get(j);
+
+      fskip = 0;
+      nskip = 0;
+      adc = (unsigned short*)ch -> GetWaveform();
+      for(int k = 0; k < nbinsx;k++){
+	dd = adc[k]-ped;
+	rms += dd*dd;
+      }
+      rms /= nbinsx;
+      dum = rms*5;
+      for(int k = 0; k < nbinsx; k++){
+	adcp = adc[k] - ped;
+	qtot[id[j]] += adcp;
+	
+	if(k-nskip > 50)
+	  fskip = 0;
+	if(adcp > rms*5 && fskip == 0){
+       	  // fmax[id[j]][npeaks[id[j]]] = qtot[id[j]];
+       	  // maxx[id[j]][npeaks[id[j]]] = k;
+	  npeaks[id[j]]++;
+
+	  fskip = 1;
+	  nskip = k;
+	}
+	
+	if(adcp > dum){
+	  dum = adcp;
+	  qmax[id[j]] = dum;
+	  qmaxx[id[j]] = k;
+	}
+      }
+
+      // cout << Form("|%2d, %3.0f, %.3f, %2d, tbit %d",
+      // 		   id[j], qmax[id[j]], rms, npeaks[id[j]], tbit[id[j]]) << "| ";
+      // if(j == 3 || (j != 0 && (j+1)%4 == 0)) cout << endl;
+    }
+    // cin >> a;
+    // if(a == 'q') break;
+    tree -> Fill();
+  }
+
+  t.Stop();
+  t.Print();
+  TFile of(Form("/y/kmseo/data/WCMD/%06d/tree_WCMD_%05d.root", runnum, subrun), "recreate");
+  tree -> Write();
+  of.Close();
+}

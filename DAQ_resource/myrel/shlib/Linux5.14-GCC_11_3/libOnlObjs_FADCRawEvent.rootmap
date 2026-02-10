@@ -1,0 +1,4 @@
+[ libOnlObjs.so ]
+# List of selected classes
+class FADCRawEvent
+header OnlObjs/FADCRawEvent.hh

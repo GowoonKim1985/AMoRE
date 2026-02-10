@@ -1,0 +1,119 @@
+R__LOAD_LIBRARY(libHist)
+R__LOAD_LIBRARY(../lib/libRawObjs)
+
+
+
+void gaintre()
+{
+
+  //gStyle->SetOptFit(1);
+  //gStyle->SetOptStat(0);
+  
+  int run = 367;
+  
+  int id, evt, Sid;
+  double q, q1;
+  int Sch = 384; // number of side channels
+  double gain, gain1[384], gain2[384], gain3[384], cons, stdv;
+
+  TChain * chain = new TChain("prod");
+  chain->Add(Form("spetree_%06d.root", run));
+
+  chain->SetBranchAddress("evt", &evt);
+  chain->SetBranchAddress("id", &id);
+  chain->SetBranchAddress("q", &q);
+
+  TFile * out = new TFile("spegain.root", "recreate");
+  TTree * tree = new TTree("gain", "");
+
+  tree->Branch("Sid", &Sid, "Sid/I");
+  tree->Branch("gain", &gain, "gain/D");
+ 
+  TH1D *qhis[384], *qhis2[384];
+
+  for(int i = 0; i < 384; i++) {
+    qhis[i] = new TH1D(Form("qhis_%d", i+1), "", 1100, -100, 1000);
+    qhis2[i] = new TH1D(Form("qhis2_%d", i+1), "", 1100, -100, 1000);
+    qhis[i]->SetTitle(Form("Det_%d-Ch_%d", (i)/4 +1, i+1));
+  }
+  TH1D *gainhis = new TH1D("gainhis", "", 50, 20, 180);
+  TH1D *gainhis2 = new TH1D("gainhis2", "", 50, 20, 180);
+
+  evt = chain->GetEntries();
+  cout << "Tatal number of entries: " << evt << endl;
+  
+  //for(int i = 0; i < evt; i++){
+  for(int i = 0; i < 217657921; i++){
+    chain->GetEntry(i);
+
+    if (i > 0 && i % 10000000 == 0)
+      cout << Form("%6d events processed ......", i) << endl;
+
+    //cout << i << ": " << id << ": " << q << endl;
+
+    if((id < 192) || (id > 259 && id < 452)) {
+      if(id < 192) id -= 0;
+      else if(id > 259 && id < 452) id = id - 68;
+      else continue;
+      //cout << i << ": " << id << ": " << q << endl;
+      qhis[id]->Fill(q);
+    }
+  }
+  //--------------------------------first fit----------------------
+  for(int i = 0; i < 384; i++) {
+    
+    int maxbin = qhis[i]->GetMaximumBin();
+    double maxx = qhis[i]->GetBinCenter(maxbin);
+    double std = qhis[i]->GetStdDev();
+
+    double upper = maxx + std;
+    double lower = maxx - std;
+
+    TF1 *f1 = new TF1("f1", "gaus", lower, upper);
+    
+    qhis[i]->Fit(f1, "RQ0");
+    
+    cons = f1->GetParameter(0);
+    gain1[i] = f1->GetParameter(1);
+    stdv = f1->GetParameter(2);
+    
+    //cout <<"gain1: " << i+1 << ": " << cons << ": " << gain1 << ": " << stdv << endl;   
+  }
+  
+  for(int i = 0; i < 384; i++) {
+
+    int maxbin = qhis[i]->GetMaximumBin();
+    double maxx = qhis[i]->GetBinCenter(maxbin);
+
+    double upper; 
+    double lower;
+
+    upper = maxx + 1.5*stdv;
+    lower = maxx - 1.5*stdv;
+      
+    TF1 *f2 = new TF1("f2", "gaus", lower, upper);
+    f2->SetParameter(0, cons);
+    f2->SetParameter(1, gain1[i]);
+    f2->SetParameter(2, stdv);
+    
+    qhis[i]->Fit(f2, "RQ");
+    
+    gain2[i] = f2->GetParameter(1);
+    
+    cout << "gain2: " << i+1 << ": " << gain2[i] << endl;
+    Sid = i;
+    gain = gain2[i];
+
+    gainhis->Fill(gain);
+    
+    tree->Fill();
+  }
+  
+    tree->Write();
+    out->Close();
+
+   TCanvas *can1 = new TCanvas("can1", "", 800, 800);
+   can1->cd();
+   gainhis->Draw();
+
+}

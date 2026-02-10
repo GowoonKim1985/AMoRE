@@ -1,0 +1,4 @@
+[ libMuonObjs.so ]
+# List of selected classes
+class PSHit
+header MuonObjs/PSHit.hh

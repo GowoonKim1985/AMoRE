@@ -1,0 +1,20 @@
+spe gain matching using muon run
+
+1. make trgnum1 tree
+
+   prod_psd_pedtrg.C
+   prod_psd_pedtrg_old.C (before run 339)
+
+
+2. make qhis for all ch
+
+   qhis_all.c
+
+3. make gain ref using spe fitting (bot only now)
+
+   gainfit_bot.C (gainfit_bot_[runnum].C)
+
+
+
+ ./gain/gain_[runnum].root : gain ref, qhis (fitted)
+ 

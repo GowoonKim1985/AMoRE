@@ -1,0 +1,84 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+
+
+void plot_wcdtest()
+{
+  gStyle -> SetOptStat(0);
+  
+  int runnum = 303;
+  
+  TChain *chain = new TChain("prd_wcd");
+  int ntime = 0;
+
+  chain -> Add("/data/kmseo/WCMD/000311/prd_wcd_000311_*.root");
+  chain -> Add("/data/kmseo/WCMD/000315/prd_wcd_000315_*.root");
+  chain -> Add("/data/kmseo/WCMD/000318/prd_wcd_000318_*.root");
+
+  WCEvent *wevt = new WCEvent();
+  chain -> SetBranchAddress("WCEvent", &wevt);
+  
+  unsigned int trigtime; 
+
+  TH2D *scatmap = new TH2D("scatmap", "", 7, 0, 7, 7, 0, 7);
+  
+  double qtot[48] = {0};
+  double fmax[48] = {0};
+  double qmax[48] = {0};
+  int id[48];
+  int abitsum;
+  double qsum, qsumsel;
+  double maxQ;
+  int maxid;
+  double spe = 39;
+
+  double numer[48] = {0};
+  double denom;
+  
+  int nevt = 20000; //chain -> GetEntries();
+  cout << nevt << endl;
+  
+  for(int i = 0; i < nevt; i++){
+    chain -> GetEntry(i);
+    if(i != 0 && i%2000000 == 0) cout << i << endl;
+
+    trigtime = wevt->GetTriggerTime();
+
+    qsum = 0;
+    abitsum = 0;
+    maxQ = 0;
+    denom = 0;
+    int nch = wevt -> GetN();
+    for(int j = 0; j < nch; j++){
+      WCPmt *pmt = wevt -> Get(j);
+      id[j] = pmt -> GetID();
+
+      qtot[id[j]] = pmt -> GetQtot();
+      qmax[id[j]] = pmt -> GetQmax();
+      fmax[id[j]] = pmt -> GetFmax();
+
+      qsum += qtot[id[j]];
+
+      numer[id[j]] = id[j]*qtot[id[j]];
+      denom += id[j]*qtot[id[j]];
+    }
+
+    for(int j = 0; j < nch; j++){
+      numer[id[j]] /= denom;
+
+      double x = id[j]%7;
+      double y = id[j]/7;
+
+      scatmap -> SetBinContent(x, y, numer[id[j]]);
+    }
+  }
+  
+  TCanvas *canS = new TCanvas("canS", "", 1000, 1000);
+  scatmap->Draw("colz");
+  // l3->Draw("same");
+  // l4->Draw("same");
+  //canS-> Print("scatmap.png");
+  
+   
+}

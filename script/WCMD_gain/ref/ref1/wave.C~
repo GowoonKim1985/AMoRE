@@ -1,0 +1,37 @@
+R__LOAD_LIBRARY(libHist)
+R__LOAD_LIBRARY(libRawObjs)
+
+void wave()
+{
+
+  TChain * chain = new TChain("AbsEvent");
+  chain->Add("data/KA_test.root");
+
+  FChannelData * data = new FChannelData();
+  chain->SetBranchAddress("FChannelData", &data);
+
+  int nent = 100000; // chain->GetEntries();
+
+  TCanvas * can = new TCanvas("can", "", 800, 600);
+  can->Divide(2,2);
+
+  for (int i = 0; i < nent; i++) {
+    chain->GetEntry(i);
+
+    for (int j = 0; j < 4; j++) {
+      FChannel * ch = data->Get(j);
+      TH1D * chhis = ch->GetWaveformHist();
+
+      can->cd(j+1);
+      chhis->Draw();
+      //ch->GetWaveformHist()->Draw();
+    }
+    can->Modified();
+    can->Update();
+
+    char a;
+    cin >> a;
+
+    if(a == 'q') break;
+  }
+}

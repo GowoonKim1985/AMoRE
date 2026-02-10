@@ -1,0 +1,4 @@
+[ libOnlObjs.so ]
+# List of selected classes
+class BuiltEvent
+header OnlObjs/BuiltEvent.hh

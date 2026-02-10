@@ -1,0 +1,15 @@
+run [prod.sh]/1hr using crontab
+
+//list
+crontab -l
+
+//edit
+crontab -e
+
+//delete all
+crontab -r
+
+//run/stop/status crontab
+service crond start
+service crond stop
+service crond status

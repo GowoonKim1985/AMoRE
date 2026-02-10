@@ -1,0 +1,406 @@
+R__LOAD_LIBRARY(libRawObjs)
+R__LOAD_LIBRARY(libHist)
+R__LOAD_LIBRARY(libGui)
+R__LOAD_LIBRARY(libTree)
+
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/stat.h>
+
+//void SETN00()
+void psmd_align_2w()
+{
+ 
+  int runnum=330  ;//wcmd evt<psmd, tag==1, iadc1<iadc2
+  int isub = 0;
+  int fsub = 335;
+  int evtnum, bitsum, evtnum1, evtnum2, bitsum1, bitsum2;
+  double trgtime1, trgtime2, trgtime;
+  int trgdet[120];
+  int daqnum[120];
+  double qsum[120];
+  double iq[120][4];
+  
+  TTree * psmd = new TTree("psmd","psmd");
+  psmd->Branch("evtnum", &evtnum, "evtnum/I");
+
+  psmd->Branch("trgtime", &trgtime, "trgtime/D");
+  //  psmd->Branch("trgtime1", &trgtime1, "trgtime1/D");
+  //  psmd->Branch("trgtime2", &trgtime2, "trgtime2/D");  
+  psmd->Branch("bitsum", &bitsum, "bitsum/I");
+  psmd->Branch("bitsum1", &bitsum1, "bitsum1/I");
+  psmd->Branch("bitsum2", &bitsum2, "bitsum2/I");
+  psmd->Branch("daqnum", daqnum, "daqnum[bitsum]/I");  
+  psmd->Branch("trgdet", trgdet, "trgdet[bitsum]/I");
+  psmd->Branch("qsum", qsum, "qsum[bitsum]/D");
+  psmd->Branch("iq", iq, "iq[bitsum][4]/D");  
+
+  TChain * psmd1 = new TChain("prd_psd");
+  for(int ifile=isub; ifile<=fsub; ifile++){
+    psmd1->Add(Form("./data/%06d/prd_psd_ped_daq1_%06d_%05d.root", runnum, runnum,ifile));
+  }
+  TChain * psmd2 = new TChain("prd_psd");
+  for(int ifile=isub; ifile<=fsub; ifile++){
+    psmd2->Add(Form("./data/%06d/prd_psd_ped_daq2_%06d_%05d.root", runnum, runnum,ifile));
+  }
+
+  int tent1 = psmd1->GetEntries();
+  int tent2 = psmd2->GetEntries();
+  //  cout<<"test"<<endl;  
+  psmd1->GetEntry(tent1-1);
+  int tevtnum1 = psmd1->GetLeaf("fEventNumber")->GetValue();
+  psmd2->GetEntry(tent2-1);
+  int tevtnum2 = psmd2->GetLeaf("fEventNumber")->GetValue();
+  int tevtnum;
+  if(tevtnum1>tevtnum2){tevtnum=tevtnum1;}
+  else{tevtnum=tevtnum2;}
+  cout<<"tevtnum daq1 : "<<tevtnum1<<endl;
+  cout<<"tevtnum daq2 : "<<tevtnum2<<endl;
+  cout<<"tevtnum : "<<tevtnum<<endl;
+
+  int ient1;
+  int ient2;
+  int ient1_temp=0;
+  int ient2_temp=0;
+  //  int ient1_temp= psmd1->GetLeaf("fEventNumber")->GetValue();
+  //  int ient2_temp= psmd2->GetLeaf("fEventNumber")->GetValue();
+
+  
+  psmd1->GetEntry(0);
+  int ievt=psmd1->GetLeaf("fEventNumber")->GetValue();
+  
+  for (int ievtnum=ievt; ievtnum<=tevtnum; ievtnum++){
+    //      for (int ievtnum=1; ievtnum<=1000; ievtnum++){    
+    bitsum1=0;
+    bitsum2=0;
+    bitsum=0;
+    if(ievtnum%100000==0){cout<<ievtnum<<" evts process..."<<endl;}
+    //  for (int ievtnum=1; ievtnum<=200000; ievtnum++){    
+    //ievtnum par @ daq1 
+    //    cout<<"evtnum "<<ievtnum<<endl;
+    //    cout<<""<<endl;
+    //      cout<<"evtnum : "<<ievtnum<<endl;
+    for(ient1 = ient1_temp; ient1<tent1; ient1++){
+ //    cout<<"psmd1 loop"<<endl;
+//     cout<<"daq1 ent "<<ient1<<endl;
+      psmd1->GetEntry(ient1);
+      evtnum1 = psmd1->GetLeaf("fEventNumber")->GetValue();
+      //     cout<<"evtnum1 : "<<evtnum1<<endl;
+      if(evtnum1<ievtnum){}
+      else if(evtnum1==ievtnum){
+	//	cout<<"find"<<endl;
+	evtnum=evtnum1;
+	//	daqnum=1;
+	trgtime= psmd1->GetLeaf("fTriggerTime")->GetValue();
+	bitsum1 = psmd1->GetLeaf("fColl.fID")->GetNdata();
+	for(int ibit1=0; ibit1<bitsum1; ibit1++){
+	  daqnum[ibit1]=1;
+	  trgdet[ibit1]=psmd1->GetLeaf("fColl.fID")->GetValue(ibit1);
+	  qsum[ibit1]=psmd1->GetLeaf("fColl.fQsum")->GetValue(ibit1);
+	  for(int iq1=0; iq1<4; iq1++){
+	    iq[ibit1][iq1]=psmd1->GetLeaf("fColl.fQ")->GetValue((ibit1*4)+iq1);
+	  }
+	}
+	//	psmd->Fill();
+      }
+      else if(evtnum1>ievtnum){ient1_temp=ient1; break;}
+    }  
+    for(ient2=ient2_temp; ient2<tent2; ient2++){
+      //            cout<<"psmd2 loop"<<endl;
+      //      cout<<"daq2 ent "<<ient1<<endl;
+      psmd2->GetEntry(ient2);
+      evtnum2 = psmd2->GetLeaf("fEventNumber")->GetValue();
+      //            cout<<"daq2 evtnum "<<evtnum2<<endl;      
+      if(evtnum2<ievtnum){}
+      else if(evtnum2==ievtnum){
+	//		cout<<"find"<<endl;
+	evtnum=evtnum2;
+	//	daqnum=2;
+	trgtime= psmd2->GetLeaf("fTriggerTime")->GetValue();
+	bitsum2= psmd2->GetLeaf("fColl.fID")->GetNdata();
+	for(int ibit2=0; ibit2<bitsum2; ibit2++){
+	  daqnum[bitsum1+ibit2]=2;
+	  trgdet[bitsum1+ibit2]=psmd2->GetLeaf("fColl.fID")->GetValue(ibit2);
+	  qsum[bitsum1+ibit2]=psmd2->GetLeaf("fColl.fQsum")->GetValue(ibit2);	
+	  for(int iq2=0; iq2<4; iq2++){
+	    iq[bitsum1+ibit2][iq2]=psmd2->GetLeaf("fColl.fQ")->GetValue((ibit2*4)+iq2);
+	  }
+
+	}
+	//	cout<<"psmd fill"<<endl;
+      }
+      else if(evtnum2>ievtnum){ient2_temp=ient2; break;}
+    }
+    bitsum=bitsum1+bitsum2;
+    psmd->Fill();
+  } 
+
+  TString anafile = Form("./data/%06d/psmd_ped_%06d_%05d_%05d.root", runnum, runnum, isub, fsub);
+  TFile *out = new TFile(anafile.Data(),"RECREATE");
+
+  psmd->Write();
+
+}
+
+
+
+
+
+  /*
+  
+  //  for(int itemp1=0; ievt1<tevt1; ievt1++){
+  for(ient1 = ient1_temp; ient1<10; ient1++){    
+    cout<<"daq1 entry: "<<ient1<<endl;
+    psmd1->GetEntry(ient1);
+    evtnum1 = psmd1->GetLeaf("fEventNumber")->GetValue();
+    if(evtnum1==ievtnum){
+      evtnum=evtnum1;
+      daqnum=1;
+      trgtime= psmd1->GetLeaf("fTriggerTime")->GetValue();
+      bitsum= psmd1->GetLeaf("fColl.fID")->GetNdata();
+      for(int ibit1=0; ibit1<bitsum; ibit1++){
+	trgdet[ibit1]=psmd1->GetLeaf("fColl.fID")->GetValue();
+	iqsum[ibit1]=psmd1->GetLeaf("fColl.fQsum")->GetValue();	
+      }
+      psmd->Fill();
+    }
+    else if(evtnum1>ievtnum){ient1_temp=ient1+1; break;}
+
+   
+    for(ievt2=ievt2_temp; ievt2<tevt2; ievt2++){
+      psmd2->GetEntry(ievt2);
+      evtnum2 = psmd2->GetLeaf("fEventNumber")->GetValue();
+      if(evtnum2==ievtnum){
+	evtnum=evtnum2;
+	daqnum=2;
+	trgtime= psmd2->GetLeaf("fTriggerTime")->GetValue();
+	bitsum= psmd2->GetLeaf("fColl.fID")->GetNdata();
+	for(int ibit2=0; ibit2<bitsum; ibit2++){
+	  trgdet[ibit2]=psmd1->GetLeaf("fColl.fID")->GetValue();
+	  iqsum[ibit2]=psmd1->GetLeaf("fColl.fQsum")->GetValue();	
+	}
+	psmd->Fill();
+      }
+      else if(evtnum2>ievtnum){ievt2_temp=evtnum2; break;}
+    }
+
+
+
+
+    
+    for(ievt2=ievt2_temp; ievt2<tevt2; ievt2++){
+      psmd2->GetEntry(ievt2);
+      evtnum2 = psmd2->GetLeaf("fEventNumber")->GetValue();
+      if(evtnum2==ievtnum){
+	evtnum=evtnum2;
+	daqnum=2;
+	trgtime= psmd2->GetLeaf("fTriggerTime")->GetValue();
+	bitsum= psmd2->GetLeaf("fColl.fID")->GetNdata();
+	for(int ibit2=0; ibit2<bitsum; ibit2++){
+	  trgdet[ibit2]=psmd1->GetLeaf("fColl.fID")->GetValue();
+	  iqsum[ibit2]=psmd1->GetLeaf("fColl.fQsum")->GetValue();	
+	}
+	psmd->Fill();
+      }
+      else if(evtnum2>ievtnum){ievt2_temp=evtnum2; break;}
+    }
+    ievtnum = ievtnum+1;
+  }
+}
+  */
+  /*
+    
+
+  
+  
+  
+    
+  TTree * coin = new TTree("coin","coin");
+  coin->Branch("ievtnum",&ievtnum,"ievtnum/I");
+  coin->Branch("ievtnum1",&ievtnum1,"ievtnum1/I");
+  coin->Branch("ievtnum2",&ievtnum2,"ievtnum2/I");
+  coin->Branch("fevtnum",&fevtnum,"fevtnum/I");  
+  coin->Branch("itrgtime",&itrgtime,"itrgtime/D");
+  coin->Branch("itrgtime1",&itrgtime1,"itrgtime1/D");  
+  coin->Branch("itrgtime2",&itrgtime2,"itrgtime2/D");
+  coin->Branch("ftrgtime",&ftrgtime,"ftrgtime/D");
+  coin->Branch("timegap", &timegap,"timegap/D");
+  coin->Branch("timegap1", &timegap1,"timegap1/D");
+  coin->Branch("timegap2", &timegap2,"timegap2/D");
+
+   coin->Branch("ibitsum",&ibitsum,"ibitsum/I");
+   coin->Branch("itrgdet",itrgdet,"itrgdet[ibitsum]/I");   
+   coin->Branch("iqsum",&iqsum,"iqsum/D");      
+   coin->Branch("iqtot",iqtot,"iqtot[ibitsum]/D");   
+
+   coin->Branch("fbitsum",&fbitsum,"fbitsum/I");
+   coin->Branch("ftrgdet",ftrgdet,"ftrgdet[fbitsum]/I");
+   coin->Branch("fqtot",fqtot,"fqtot[fbitsum]/I");
+
+  TChain * psmd1 = new TChain("prd_psd");
+  psmd1->Add(Form("/home/kkw/PROD/PSMD/%06d/prd_psd_daq1_%06d.root", runnum, runnum));  
+
+  TChain * psmd2 = new TChain("prd_psd");
+  psmd2->Add(Form("/home/kkw/PROD/PSMD/%06d/prd_psd_daq2_%06d.root", runnum, runnum));  
+
+  TChain * wcmd = new TChain("prd_wcd");
+  wcmd->Add(Form("/home/kkw/PROD/WCMD/%06d/prd_wcd_%06d.root", runnum, runnum));
+
+  //making idaq1&2 sum tree
+  
+
+  int itevt1=psmd1->GetEntries();
+  int itevt2=psmd2->GetEntries();
+  ftevt=wcmd->GetEntries();
+  //int tevt=wcmd->GetEntriees();
+
+  int itemp1=0;
+  int itemp2=0;
+  double iqtot1[10];
+  double iqtot2[10];
+  int ibitsum1, ibitsum2;
+  int itrgdet1[10], itrgdet2[10];
+  double trg_timegap[2], trg_itime[2], trg_ievt[2];
+  //
+  for(int i=0; i<ftevt; i++){
+  
+    ibitsum1=0; ibitsum2=0;
+    itrgtime1=0; itrgtime2=0;
+    trg_timegap[0]=0; trg_timegap[1]=0; trg_itime[0]=0; trg_itime[1]=0; trg_ievt[0]=0; trg_ievt[1]=0;
+    
+    wcmd->GetEntry(i);
+    fevtnum=wcmd->GetLeaf("fEventNumber")->GetValue(); 
+    fbitsum = wcmd->GetLeaf("fColl.fID")->GetNdata();
+    ftrgtime=wcmd->GetLeaf("fTriggerTime")->GetValue();
+    //    cout<<""<<endl;
+    //   cout<<"wcmd evnt num / trgtime : "<<fevtnum<<" / "<<ftrgtime<<endl;
+	
+    for(int ievt1=itemp1; ievt1<itevt1; ievt1++){
+      //     cout<<"PSMD1 evt"<<ievt1<<endl;
+      //for iadc1
+      psmd1->GetEntry(ievt1);
+
+      itrgtime1=psmd1->GetLeaf("fTriggerTime")->GetValue();
+      ievtnum1= psmd1->GetLeaf("fEventNumber")->GetValue();
+	timegap1=itrgtime1-ftrgtime;
+      //      timegap1=itrgtime1-ftrgtime;
+      //    cout<<"psmd1 evnt num / trgtime : "<<ievtnum1<<" / "<<itrgtime1<<endl;
+
+      if(timegap1>1000){
+	itemp1=ievt1-1;
+	break;
+      }
+
+      if(abs(timegap1)<1000){
+	trg_itime[0]=itrgtime1;
+	trg_timegap[0]=timegap1;
+	trg_ievt[0]=ievtnum1;
+
+	cout<<"trgnum(wcmd/psmd1) : "<<i<<"/"<<ievt1<<endl;
+	cout<<"timegap(p-w) : "<<timegap1<<endl;
+
+	for(int fch=0; fch<fbitsum; fch++){
+	  ftrgdet[fch]=wcmd->GetLeaf("fColl.fID")->GetValue(fch);
+	  fqtot[fch]=wcmd->GetLeaf("fColl.fQtot")->GetValue(fch);
+	}
+
+	ibitsum1 = psmd1->GetLeaf("fColl.fID")->GetNdata();      
+	for(int ich1=0; ich1<ibitsum1; ich1++){
+	  itrgdet1[ich1]=psmd1->GetLeaf("fColl.fID")->GetValue(ich1);
+	  iqtot1[ich1]=psmd1->GetLeaf("fColl.fQsum")->GetValue(ich1);
+	}
+	
+      }
+    }
+
+    //for iadc2
+    for(int ievt2=itemp2; ievt2<itevt2; ievt2++){
+      psmd2->GetEntry(ievt2);
+
+      itrgtime2=psmd2->GetLeaf("fTriggerTime")->GetValue();
+      ievtnum2= psmd2->GetLeaf("fEventNumber")->GetValue();
+      timegap2=itrgtime2-ftrgtime;
+
+      //    cout<<"psmd2 evnt num / trgtime : "<<ievtnum2<<" / "<<itrgtime2<<endl;
+
+      if(timegap2>1000){
+	itemp2=ievt2-1;
+	break;
+      }
+
+      if(abs(timegap2)<1000){
+	trg_itime[1]=itrgtime2;
+	trg_timegap[1]=timegap2;
+	trg_ievt[1]=ievtnum2;
+
+	//	cout<<"timegap2 : "<<timegap2<<endl;
+	cout<<"trgnum(wcmd/psmd2) : "<<i<<"/"<<ievt2<<endl;
+	cout<<"timegap(p-w) : "<<timegap2<<endl;
+
+	for(int fch=0; fch<fbitsum; fch++){
+	  ftrgdet[fch]=wcmd->GetLeaf("fColl.fID")->GetValue(fch);
+	  fqtot[fch]=wcmd->GetLeaf("fColl.fQtot")->GetValue(fch);
+	  //	  cout<<"fQtot/ch : "<<fqtot[fch]<<"/"<<ftrgdet[fch]<<endl;
+	}
+
+	ibitsum2 = psmd2->GetLeaf("fColl.fID")->GetNdata();      
+	for(int ich2=0; ich2<ibitsum2; ich2++){
+	  itrgdet2[ich2]=psmd2->GetLeaf("fColl.fID")->GetValue(ich2);
+	  iqtot2[ich2]=psmd2->GetLeaf("fColl.fQsum")->GetValue(ich2);
+	}
+	
+      }
+
+    }
+    //    cout<<"fqtot "<<fqtot[0]<<endl;
+    if(ibitsum1==0){
+      //      cout<<"no coin. btw PSMD1-WCMD"<<endl;
+      itrgtime1=0;
+      ievtnum1=0;
+      timegap1=0;
+      itrgtime2=trg_itime[1];
+      ievtnum2=trg_ievt[1];
+      timegap2=trg_timegap[1];
+
+      itrgtime=trg_itime[1];
+      ievtnum=trg_ievt[1];
+      timegap=trg_timegap[1];
+    }
+    if(ibitsum2==0){
+      //      cout<<"no coin. btw PSMD2-WCMD"<<endl;
+      itrgtime2=0;
+      ievtnum2=0;
+      timegap2=0;
+      itrgtime1=trg_itime[0];
+      ievtnum1=trg_ievt[0];
+      timegap1=trg_timegap[0];
+
+      itrgtime=trg_itime[0];
+      ievtnum=trg_ievt[0];
+      timegap=trg_timegap[0];
+
+    }
+
+    ibitsum = ibitsum1+ibitsum2;
+    iqsum=0;
+    for(int ich1=0; ich1<ibitsum1; ich1++){
+      itrgdet[ich1]=itrgdet1[ich1];
+      iqtot[ich1]=iqtot1[ich1];
+      iqsum=iqsum+iqtot1[ich1];
+    }
+    for(int ich2=0; ich2<ibitsum2; ich2++){
+      itrgdet[ibitsum1+ich2]=itrgdet2[ich2];
+      iqtot[ibitsum1+ich2]=iqtot2[ich2];
+      iqsum=iqsum+iqtot2[ich2];
+    }
+
+
+    
+    if (ibitsum>0){coin->Fill();}
+
+ }
+
+   
+
+}
+  */

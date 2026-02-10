@@ -1,0 +1,157 @@
+R__LOAD_LIBRARY(libHist)
+R__LOAD_LIBRARY(libRawObjs)
+//R__LOAD_LIBRARY(/home/kmseo/Works/muon_3.1.2/shlib/Linux5.14-GCC_11_4/libMuonObjs.so)
+R__LOAD_LIBRARY(/home/kkw/muon_3.1.2/shlib/Linux5.14-GCC_11_4/libMuonObjs.so)
+
+void prod_wcd_ped()
+{
+  int runnum = 30;
+  int startrun=101;
+  //  int subrun=1;  
+  int endrun=696;
+  TStopwatch t;
+  t.Start();
+
+
+  for(int i=startrun; i<=endrun; i++){
+    cout<<"file "<<i<<endl;
+    int subrun=i;
+  
+  TChain * chain = new TChain("AbsEvent");
+  chain -> Add(Form("/data/amore2test/RAW/%06d/FADC_%06d.root.%05d", runnum, runnum, subrun));
+  if(chain == NULL){
+    cout << "!" << endl;
+    return 0;
+  }
+
+  EventInfo * info = new EventInfo();
+  FChannelData * data = new FChannelData();
+  chain->SetBranchAddress("EventInfo", &info);
+  chain->SetBranchAddress("FChannelData", &data);
+
+  WCEvent *wevent = new WCEvent();
+//  TFile *of = new TFile(Form("/home/kkw/muon_3.1.2/test/data/WCMD/%06d/prd_wcd_%06d_%05d.root", runnum, runnum, subrun), "recreate");
+  TFile *of = new TFile(Form("./data/%06d/prd_wcdped_%06d_%05d.root", runnum,runnum, subrun), "recreate");
+  //  TFile *of = new TFile("./test.root", "recreate");
+
+  TTree *otree = new TTree("prd_wcd", "prd_wcd");
+  otree -> Branch("WCEvent", &wevent);
+  
+  int id[48];
+  int nbinsx;
+  unsigned short *adc = new unsigned short[nbinsx];
+  unsigned short trgtype;
+//  unsigned short ped;
+  double ped;
+  double rms, trgtime;
+  double qtot[48] = {0};
+  double fmax[48] = {0};
+  double qmax[48] = {0};
+  int fmaxx[48] = {0};
+  int tbit[48] = {0};
+  int npeaks[48] = {0};
+  int nbit, fskip, nskip, dum, adcp, dd;
+  char a;
+
+  int nevt = chain -> GetEntries();
+  cout << nevt << endl;
+  //  for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < nevt; i++) {
+    chain->GetEntry(i);
+    if(i != 0 && i%1000 == 0) cout << i << endl;
+    nbit = 0;
+
+    //       if(info -> GetTriggerType() == 0) continue;
+    if(info -> GetTriggerType() == 1) {       
+    
+    wevent -> Clear();
+    wevent -> SetEventNumber(info -> GetTriggerNumber());
+    wevent -> SetTriggerTime(info -> GetTriggerTime());
+
+    trgtype = info->GetTriggerType();
+
+    
+    int nch = data -> GetN();
+    //    cout<<"entry " <<i <<" trgtype " <<trgtype<<" nch "<<nch<<endl;
+    for(int j = 0; j < nch; j++){
+      FChannel * ch = data->Get(j);
+      id[j] = ch -> GetID()-1;
+      tbit[id[j]] = ch -> GetBit();
+      //      cout<<"ch tbit "<<tbit[id[j]]<<endl;
+      //      if(tbit[id[j]] != 1) continue;
+
+      nbinsx = ch -> GetNdp();
+      //cout << nbinsx << endl;
+      adc = (unsigned short*)ch -> GetWaveform();
+
+      ped = 0;//ch -> GetPedestal();
+      rms = 0;
+      for(int k = 0; k < 250;k++){
+	dd = adc[k];
+	//cout << k << " " << adc[k] << " " << ped << " " << dd << endl;
+	ped += dd;
+	rms += dd*dd;
+      }
+      ped /= 250.;
+      rms /= 250.;
+      rms = TMath::Sqrt(rms);
+      rms -= ped;
+      //cout << rms << endl;
+      dum = rms*5;
+
+      npeaks[id[j]] = 0;
+      qtot[id[j]] = 0;
+      qmax[id[j]] = 0;
+     
+      fskip = 0;
+      nskip = 0;
+      for(int k = 0; k < nbinsx; k++){
+	adcp = adc[k] - ped;
+	if(k > 280 && k < 430)
+	  qtot[id[j]] += adcp;
+	
+	if(k-nskip > 50)
+	  fskip = 0;
+	if(adcp > rms*5 && fskip == 0){
+	  npeaks[id[j]]++;
+
+	  fskip = 1;
+	  nskip = k;
+	}
+	
+	if(adcp > dum){
+	  //cout << adcp << " " << dum << endl;
+	  dum = adcp;
+	  fmax[id[j]] = dum;
+	  fmaxx[id[j]] = k;
+
+	  for(int l = k-4; l < k+8; l++)
+	    qmax[id[j]] += adc[l] - ped;
+	}
+      }
+
+      // cout << Form("|%2d, %3.0f, %.3f, %2d, tbit %d",
+      // 		   id[j], fmax[id[j]], rms, npeaks[id[j]], tbit[id[j]]) << "| ";
+      // if(j == 3 || (j != 0 && (j+1)%4 == 0)) cout << endl;
+
+      WCPmt *hit = wevent -> GetByID(id[j]);
+      if(!hit) hit = wevent -> Add(id[j]);
+      hit -> SetVariables(qtot[id[j]], qmax[id[j]], fmax[id[j]], fmaxx[id[j]], ped, rms);
+    }
+
+    otree -> Fill();
+  }
+  }
+
+  otree -> Write();
+  of -> Close();
+
+
+
+  }
+
+
+  
+  t.Stop();
+  t.Print();
+}
