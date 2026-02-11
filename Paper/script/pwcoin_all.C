@@ -1,7 +1,12 @@
-R__LOAD_LIBRARY(libRawObjs)
+//R__LOAD_LIBRARY(libRawObjs)
 R__LOAD_LIBRARY(libHist)
 R__LOAD_LIBRARY(libGui)
 R__LOAD_LIBRARY(libTree)
+
+//R__LOAD_LIBRARY(/home/kkw/Muon/muon_3.1.2/shlib/Linux5.14-GCC_11_4/libMuonObjs.so)
+R__LOAD_LIBRARY(/home/kkw/Muon/muon_3.1.2/shlib/Linux5.14-GCC_11_4/libRawObjs.so)
+
+
 
 #include <stdio.h>
 #include <unistd.h>
@@ -13,7 +18,7 @@ void pwcoin_all()
 
   //  double dnull = std::numeric_limits<double>::quiet_NaN(); // Null value for double
   
-  int runnum=327;
+  int runnum=330;
   //  int fsub=64;
 
   int wevtnum, pevtnum, wbitsum, pbitsum, bitsum;
@@ -38,7 +43,7 @@ void pwcoin_all()
   coin->Branch("ptrgdet", ptrgdet, "ptrgdet[pbitsum]/I");  
   coin->Branch("pqsum", pqsum, "pqsum[pbitsum]/D");
   coin->Branch("pqmax", pqmax, "pqmax[pbitsum]/D");  
-  coin->Branch("pqmin", pqmin, "pqmin[pbitsum]/D");
+  //  coin->Branch("pqmin", pqmin, "pqmin[pbitsum]/D");
   coin->Branch("pqp1", pqp1, "pqp1[pbitsum]/D");
   coin->Branch("pqp2", pqp2, "pqp2[pbitsum]/D");    
   coin->Branch("piq", piq, "piq[pbitsum][4]/D");  
@@ -52,7 +57,7 @@ void pwcoin_all()
   TChain * psmd = new TChain("psmd");
   psmd->Add(Form("./prod_2nd/psmd_%06d.root", runnum));  
 
-  TChain * wcmd = new TChain("value");
+  TChain * wcmd = new TChain("wcmd");
   wcmd->Add(Form("./prod_2nd/wcmd_%06d.root", runnum));
 
   int ptent = psmd->GetEntries();
@@ -116,7 +121,7 @@ void pwcoin_all()
 	    ptrgdet[ipbit] = psmd->GetLeaf("trgdet")->GetValue(ipbit);
 	    pqsum[ipbit] = psmd->GetLeaf("qsum")->GetValue(ipbit);
 	    pqmax[ipbit] = psmd->GetLeaf("qmax")->GetValue(ipbit);
-	    pqmin[ipbit] = psmd->GetLeaf("qmin")->GetValue(ipbit);
+	    //	    pqmin[ipbit] = psmd->GetLeaf("qmin")->GetValue(ipbit);
 	    for(int ipiq=0; ipiq<4; ipiq++){
               piq[ipbit][ipiq]=psmd->GetLeaf("iq")->GetValue(4*ipbit+ipiq);
             }
