@@ -18,7 +18,7 @@ void draw_psmd_histAll_coin(){
   TH2D * QTBhist[124];
   TH1D * Qsumhist[124];
   TString hisname;
-  double qsum, qa[4], qp1, qp2;
+  double qsum, qa[4], qp1, qp2, timegap, wqmax, wqsum;
   
   for(int i = 0; i < 124; i++){
     Qsumhist[i] = new TH1D(Form("hqsum_%d", i), "", 1000, 0, 100000);
@@ -28,22 +28,28 @@ void draw_psmd_histAll_coin(){
   int nevt = chain -> GetEntries();
   //  cout << nevt << endl;
 
-    for(int i = 0; i < nevt; i++){
+  for(int i = 0; i < nevt; i++){
       //            for(int i = 0; i < 1000000; i++){
 
     chain -> GetEntry(i);
     if(i != 0 && i%1000000 == 0) {cout << i <<"/"<<nevt << endl;}
 
     int ndata = chain->GetLeaf("pbitsum")->GetNdata();
-
+    timegap = chain->GetLeaf("timegap")->GetValue();
+    wqsum = chain->GetLeaf("wqsum")->GetValue();
+    wqmax = chain->GetLeaf("wqmax")->GetValue();
+    
+    
     //    cout<<ndata<<endl;
-    for(int j=0; j<ndata; j++){
-      int fid = chain->GetLeaf("ptrgdet")->GetValue(j);
-      qsum = chain->GetLeaf("pqsum")->GetValue(j);
-      //      cout<<"qsum "<<qsum<<endl;
-      Qsumhist[fid] ->Fill(qsum);
+    if(timegap>200&&timegap<400&&(wqmax<(wqsum*0.8-2100))){
+      for(int j=0; j<ndata; j++){
+	int fid = chain->GetLeaf("ptrgdet")->GetValue(j);
+	qsum = chain->GetLeaf("pqsum")->GetValue(j);
+	//      cout<<"qsum "<<qsum<<endl;
+	Qsumhist[fid] ->Fill(qsum);
+      }
     }
-    }
+  }
 
   
 

@@ -16,7 +16,7 @@ void fit_psmd_1det()
   //  TFile f("/home/kkw/muon_3.1.2/test/hist/muonHist.root");
   //  TFile f("./hist/qhist_psmd_bot.root");
   //    TFile f("../hist/hist_psmd_all.root");
-     TFile f("./hist/qhist_psmd_grp2.root");      
+     TFile f("./hist/qhist_psmd_grp9.root");      
 
   int cut_qsum = 16000;
   int cut_qsum_fully = 11000;
@@ -43,7 +43,7 @@ void fit_psmd_1det()
   TF1 *fitfunc, *bexp, *mLand;
   
   //    TH1D * h = (TH1D*)f.Get("hqsum_bot");
-    TH1D * h = (TH1D*)f.Get("hqsum_20");    
+    TH1D * h = (TH1D*)f.Get("hqsum_51");    
     h -> SetDirectory(0);
         h -> Rebin(2);
     //      h->GetXaxis()->SetRangeUser(range[0], range[1]);
@@ -60,6 +60,7 @@ void fit_psmd_1det()
   h->GetXaxis()->SetTitleSize(0.04);
   h->GetYaxis()->SetTitleSize(0.04);
 
+h->SetLineColor(kBlack);      // 빨간색
 
 
   h->Draw("hist");
