@@ -1,7 +1,8 @@
 R__LOAD_LIBRARY(libHist)
-R__LOAD_LIBRARY(libRawObjs)
+//R__LOAD_LIBRARY(libRawObjs)
 //R__LOAD_LIBRARY(libMuonObjs)
-R__LOAD_LIBRARY(/home/kkw/muon_3.1.2/shlib/Linux5.14-GCC_11_4/libMuonObjs.so)
+R__LOAD_LIBRARY(/home/kkw/Muon/muon_3.1.2/shlib/Linux5.14-GCC_11_4/libMuonObjs.so)
+R__LOAD_LIBRARY(/home/kkw/Muon/muon_3.1.2/shlib/Linux5.14-GCC_11_4/libRawObjs.so)
 
 void draw_wcmd_qsum_qmax(){
   
@@ -10,12 +11,13 @@ void draw_wcmd_qsum_qmax(){
   TCanvas *c1 = new TCanvas("c2", "qmax vs qsum", 1100, 1000);
   TH2D * qh = new TH2D("qh","",500,0,50000,500,0,50000);
 
- TString rawfile = "./prod_2nd/wcmd_000330.root";
- TChain * t = new TChain("value");
+ TString rawfile = "./prod_2nd/wcmd_all.root";
+ TChain * t = new TChain("wcmd");
  t->Add(rawfile.Data());
  int tent= t->GetEntries();
  double qsum, qmax, tch, ich;
   for(int i=0; i<tent; i++){
+    if(i%100000==0){cout<<i<<"/"<<tent<<endl;}
     //  for(int i=0; i<10000; i++){
    t->GetEntry(i);
    tch=t->GetLeaf("ch")->GetNdata();
