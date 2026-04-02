@@ -72,5 +72,5 @@ void get_angle_step2() {
     outTree->Write();
     outFile->Close();
 
-    std::cout << "Saved side-side muon directions to side_side.root\n";
+//    std::cout << "Saved side-side muon directions to side_side.root\n";
 }

@@ -18,8 +18,8 @@ void plot_draw_step3()
   gStyle->SetOptStat(0);
   TGaxis::SetMaxDigits(3);
 
-      int nbins = 180;
-      //  int nbins = 90;
+//      int nbins = 180;
+        int nbins = 90;
     //int nbins = 36;  
 
   //TH2D *scatter1 = new TH2D("scatter1", "", 360, 0, 1, 360, 0, 360); // theta Vs phi

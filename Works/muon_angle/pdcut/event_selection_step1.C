@@ -4,8 +4,33 @@
 #include <iostream>
 #include <map>
 #include <iomanip> 
+#include <fstream>
 
 void event_selection_step1() {
+
+  //qcut txt read
+  const int tdet = 124;
+  int det[tdet];
+  double qcut[tdet];
+
+    //std::ifstream file("cut.txt");
+    std::ifstream file("cut_pd.txt");
+
+
+
+    for (int i = 0; i < tdet; ++i) {
+        // 파일에서 두 숫자를 순서대로 읽어 x와 y 어레이에 저장
+        if (!(file >> det[i] >> qcut[i])) break; 
+    }
+
+    file.close();
+
+    // 확인용 출력 (첫 번째 데이터)
+    //    printf("First data: x[0] = %i, y[0] = %f\n", idet[115], qcut[115]);
+
+
+    
+  
   // Open geometry file
   TFile *fGeom = TFile::Open("coordinate.root");
   TTree *treeGeom = (TTree*)fGeom->Get("tree");
@@ -13,20 +38,13 @@ void event_selection_step1() {
   int detID, outID;
   double outXc, outYc, outZc;
   double xc, yc, zc, A_min, A_max;
-  /*
-  treeGeom->SetBranchAddress("detID", &detID);
-  treeGeom->SetBranchAddress("xc", &xc);
-  treeGeom->SetBranchAddress("yc", &xc);
-  treeGeom->SetBranchAddress("zc", &zc);
-  treeGeom->SetBranchAddress("A_min", &A_min);
-  treeGeom->SetBranchAddress("A_max", &A_max);
-  */
 
   double ix[127]={0}; double iy[127]={0}; double iz[127]={0};
   double minA[127]={0}; double  maxA[127]={0};
   int idet[127];
   
-  int nGeom = treeGeom->GetEntries();
+  //  int nGeom = treeGeom->GetEntries();
+  int nGeom = 124;
   for (int i = 0; i < nGeom; ++i) {
     treeGeom->GetEntry(i);
     //   cout<<"idet "<<detID<<endl;
@@ -34,23 +52,21 @@ void event_selection_step1() {
     xc=treeGeom->GetLeaf("xc")->GetValue();
     yc=treeGeom->GetLeaf("yc")->GetValue();
     zc=treeGeom->GetLeaf("zc")->GetValue();
-    A_min=treeGeom->GetLeaf("A_min")->GetValue();
-    A_max=treeGeom->GetLeaf("A_max")->GetValue();    
+    //    A_min=treeGeom->GetLeaf("A_min")->GetValue();
+    //    A_max=treeGeom->GetLeaf("A_max")->GetValue();    
+    A_min=treeGeom->GetLeaf("minAsy")->GetValue();
+    A_max=treeGeom->GetLeaf("maxAsy")->GetValue();    
 	idet[detID]=detID;
     ix[detID]=xc;
     iy[detID]=yc;
     iz[detID]=zc;
     minA[detID]=A_min;
     maxA[detID]=A_max;
-    /*
-    cout<<"detID"<<detID<<endl;
-    cout<<xc<<endl;
-    cout<<yc<<endl;
-    cout<<zc<<endl;
-    */
   }
 
-  //  cout<<idet[0]<<" "<<ix[0]<<" "<<iy[0]<<" "<<iz[0]<<" "<<minA[0]<<" "<<maxA[0];
+  for(int i=0; i< nGeom; i++){
+    cout<<idet[i]<<" "<<ix[i]<<" "<<iy[i]<<" "<<iz[i]<<" "<<minA[i]<<" "<<maxA[i]<<endl;
+  }
   //  cout<<idet[10]<<" : "<<ix[10]<<": "<<iy[10]<<": "<<iz[10]<<": "<<minA[10]<<": "<<maxA[10]<<endl;
 
   
@@ -69,15 +85,6 @@ void event_selection_step1() {
 
   //  chain->SetBranchAddress("iq", iq);
 
-  /*
-  int out_detID;
-  double out_ptime, out_av_asy, ptime,av_asy, out_qsump, qsump;
-  
-  chain->SetBranchAddress("detID", &out_detID);
-  chain->SetBranchAddress("ptime", &out_ptime);
-  chain->SetBranchAddress("qsump", &out_qsump);
-  chain->SetBranchAddress("av_asy", &out_av_asy);
-  */
   // Output tree
   TFile *fout = new TFile("psmd_2hit_sel.root", "RECREATE");
   TTree *outTree = new TTree("tree", "Computed hit positions");
@@ -110,8 +117,10 @@ void event_selection_step1() {
     if (fabs(maxA[trgdet[0]] - minA[trgdet[0]]) < 1e-6) continue;
     if (fabs(maxA[trgdet[1]] - minA[trgdet[1]]) < 1e-6) continue;
 
-    if(qsum[0] < 25000) continue;
-    if(qsum[1] < 25000) continue;
+    //1hit cut
+    
+    if(qsum[0] < qcut[trgdet[0]]) continue;
+    if(qsum[1] < qcut[trgdet[1]]) continue;
     if(grp[0]==grp[1]) continue;
 
     
@@ -174,18 +183,6 @@ void event_selection_step1() {
     }
 
     if(z_hit[0]<z_hit[1]){
-      /*
-      int temp_trgdet=trgdet[0];
-      double temp_qsum=qsum[0];
-      double temp_x=x_hit[0];
-      double temp_y=y_hit[0];
-      double temp_z=z_hit[0];      
-      int temp_grp=grp[0];
-
-      trgdet[0]=trgdet[1];
-      qsum[0]=qsum[1];
-      double temp_x=x_hit[0];
-      */
       std::swap(trgdet[0], trgdet[1]);
       std::swap(qsum[0], qsum[1]);
       std::swap(x_hit[0], x_hit[1]);

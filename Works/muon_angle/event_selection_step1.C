@@ -13,7 +13,8 @@ void event_selection_step1() {
   int det[tdet];
   double qcut[tdet];
 
-    std::ifstream file("cut.txt");
+//    std::ifstream file("cut.txt");
+    std::ifstream file("cut_pd.txt");
 
 
 
@@ -42,7 +43,8 @@ void event_selection_step1() {
   double minA[127]={0}; double  maxA[127]={0};
   int idet[127];
   
-  int nGeom = treeGeom->GetEntries();
+  //int nGeom = treeGeom->GetEntries();
+ int nGeom = 124;
   for (int i = 0; i < nGeom; ++i) {
     treeGeom->GetEntry(i);
     //   cout<<"idet "<<detID<<endl;
@@ -50,8 +52,10 @@ void event_selection_step1() {
     xc=treeGeom->GetLeaf("xc")->GetValue();
     yc=treeGeom->GetLeaf("yc")->GetValue();
     zc=treeGeom->GetLeaf("zc")->GetValue();
-    A_min=treeGeom->GetLeaf("A_min")->GetValue();
-    A_max=treeGeom->GetLeaf("A_max")->GetValue();    
+    //    A_min=treeGeom->GetLeaf("A_min")->GetValue();
+    //    A_max=treeGeom->GetLeaf("A_max")->GetValue();    
+    A_min=treeGeom->GetLeaf("minAsy")->GetValue();
+    A_max=treeGeom->GetLeaf("maxAsy")->GetValue();    
 	idet[detID]=detID;
     ix[detID]=xc;
     iy[detID]=yc;
@@ -59,6 +63,12 @@ void event_selection_step1() {
     minA[detID]=A_min;
     maxA[detID]=A_max;
   }
+
+  for(int i=0; i< nGeom; i++){
+    cout<<idet[i]<<" "<<ix[i]<<" "<<iy[i]<<" "<<iz[i]<<" "<<minA[i]<<" "<<maxA[i]<<endl;
+  }
+
+
 
   //  cout<<idet[0]<<" "<<ix[0]<<" "<<iy[0]<<" "<<iz[0]<<" "<<minA[0]<<" "<<maxA[0];
   //  cout<<idet[10]<<" : "<<ix[10]<<": "<<iy[10]<<": "<<iz[10]<<": "<<minA[10]<<": "<<maxA[10]<<endl;
@@ -69,11 +79,12 @@ void event_selection_step1() {
   chain->Add("psmd_2hit.root");
 
   int trgdet[2], trp[2];
-  double qsum[2];
+  double qsum[2], trgtime[2];
   double iq[2][4];
   double avas[2];
-  int grp[2];
+  int grp[2], bgrp[2];
   chain->SetBranchAddress("trgdet", trgdet);
+  chain->SetBranchAddress("trgtime", trgtime);
   chain->SetBranchAddress("qsum", qsum);
   chain->SetBranchAddress("grp", grp);
 
@@ -87,12 +98,14 @@ void event_selection_step1() {
   outTree->Branch("trgdet", trgdet, "trgdet[2]/I");
   //  outTree->Branch("ptime", &ptime, "ptime/D");
   outTree->Branch("qsum", qsum, "qsum[2]/D");
+  outTree->Branch("trgtime", trgtime, "trgtime[2]/D");
   outTree->Branch("x_hit", x_hit, "x_hit[2]/D");
   outTree->Branch("y_hit", y_hit, "y_hit[2]/D");
   outTree->Branch("z_hit", z_hit, "z_hit[2]/D");
   outTree->Branch("grp", grp, "grp[2]/I");
-    outTree->Branch("avas", avas, "avas[2]/D");
-    outTree->Branch("dp", dp, "dp[2]/D");    
+  outTree->Branch("bgrp", bgrp, "bgrp[2]/I");
+  outTree->Branch("avas", avas, "avas[2]/D");
+  outTree->Branch("dp", dp, "dp[2]/D");    
   
   // Dimensions
   double L = 168.0;
@@ -111,11 +124,21 @@ void event_selection_step1() {
     if (fabs(maxA[trgdet[0]] - minA[trgdet[0]]) < 1e-6) continue;
     if (fabs(maxA[trgdet[1]] - minA[trgdet[1]]) < 1e-6) continue;
 
+    //10 grp -> 5 grp : 4 side + 1 bot
+    for(int j=0; j<2; j++){
+      if(grp[j]==1||grp[j]==8){bgrp[j]=1;}
+      else if (grp[j]==2||grp[j]==3){bgrp[j]=2;}
+      else if (grp[j]==4||grp[j]==5){bgrp[j]=3;}
+      else if (grp[j]==6||grp[j]==7){bgrp[j]=4;}
+      else {bgrp[j]=0;}
+    }
+    
     //1hit cut
     
     if(qsum[0] < qcut[trgdet[0]]) continue;
     if(qsum[1] < qcut[trgdet[1]]) continue;
-    if(grp[0]==grp[1]) continue;
+    //  if(grp[0]==grp[1]) continue;
+    if(bgrp[0]==bgrp[1]) continue;
 
     
     for(int j=0; j<2; j++){
@@ -179,10 +202,12 @@ void event_selection_step1() {
     if(z_hit[0]<z_hit[1]){
       std::swap(trgdet[0], trgdet[1]);
       std::swap(qsum[0], qsum[1]);
+      std::swap(trgtime[0], trgtime[1]);
       std::swap(x_hit[0], x_hit[1]);
       std::swap(y_hit[0], y_hit[1]);
       std::swap(z_hit[0], z_hit[1]);
       std::swap(grp[0], grp[1]);
+      std::swap(bgrp[0], bgrp[1]);
 
     }
     
